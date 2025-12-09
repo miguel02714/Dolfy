@@ -15,20 +15,23 @@
 
     <style>
         :root {
-            --orange: #ff751f;
+            /* Cores */
+            --orange: #ff751f; /* Primária */
             --orange-dark: #cc5e18;
-            --red: #e53935;
-            --green: #4caf50;
-            --yellow: #ffb300;
+            --red: #e53935; /* Alerta Alto Risco */
+            --green: #4caf50; /* Alerta Baixo Risco */
+            --yellow: #ffb300; /* Alerta Moderado */
             
-            /* DARK MODE & MODERN DESIGN VARS */
-            --bg-dark: #0A0A0A; /* Mais escuro para contraste */
+            /* Tema Dark/Glass */
+            --bg-dark: #0A0A0A; 
             --surface-dark: #1F1F1F;
-            --surface-float: rgba(31, 31, 31, 0.85); /* Efeito "Frosted Glass" mais forte */
+            --surface-float: rgba(31, 31, 31, 0.85); /* Frosted Glass */
             --text-light: #F0F0F0;
             --text-secondary: #AAAAAA;
             --border-dark: #333333;
-            --shadow-float: 0 10px 30px rgba(0,0,0,0.8); /* Sombra mais profunda e suave */
+            --shadow-float: 0 10px 30px rgba(0,0,0,0.8); 
+            
+            /* Geometria */
             --radius-xl: 20px;
             --radius-l: 12px;
             --transition: all 0.2s ease;
@@ -43,24 +46,32 @@
             color: var(--text-light);
         }
 
-        #map { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; }
+        #map { 
+            width: 100vw; 
+            height: 100vh; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+        }
 
-        /* Override para o Directions ser dark mode na linha (laranja) */
+        /* Oculta os controles nativos do Directions que não queremos usar */
         .mapboxgl-ctrl-directions { display: none !important; }
+
+        /* Estilo da Linha da Rota no Mapbox - Garante cor laranja */
         .mapboxgl-ctrl-directions-route-0 { stroke-color: var(--orange) !important; }
 
         /* ======= BARRA SUPERIOR DESTINO (Refinado) ======= */
         .top-container {
             position: absolute; top: 18px; left: 50%;
             transform: translateX(-50%);
-            width: calc(100% - 52px); max-width: 750px; /* Aumento para telas maiores */
+            width: calc(100% - 52px); max-width: 750px; 
             z-index: 20;
             display: flex; flex-direction: column; gap: 8px;
         }
 
         .destino-box {
             background: var(--surface-float);
-            backdrop-filter: blur(15px); /* Mais blur, mais 'glass' */
+            backdrop-filter: blur(15px); 
             display: flex; align-items: center; gap: 12px;
             padding: 12px 16px;
             border-radius: var(--radius-xl);
@@ -78,7 +89,7 @@
 
         .destino-box input {
             flex: 1; border: none; outline: none;
-            background: transparent; /* Input transparente */
+            background: transparent; 
             color: var(--text-light);
             font-size: 16px; font-weight: 500;
             padding: 0;
@@ -88,17 +99,16 @@
 
         /* ======= BARRA DE RISCO (FLUTUANTE) (Refinado) ======= */
         .risk-alert {
-            /* MANTIDO DENTRO DO TOP-CONTAINER PARA FLUXO */
             padding: 10px 14px;
             border-radius: var(--radius-l);
             font-weight: 600; font-size: 14px; text-align: center;
             display: none;
             box-shadow: 0 4px 14px rgba(0,0,0,0.5);
             border: 1px solid transparent;
-            width: 100%; /* Ocupa a largura do container pai */
+            width: 100%; 
         }
         
-        .risk-alert span { font-weight: 700; } /* Destacar a palavra de risco */
+        .risk-alert span { font-weight: 700; } 
         
         .risk-alert.low { background: rgba(76, 175, 80, 0.15); color: var(--green); border-color: var(--green); }
         .risk-alert.moderate { background: rgba(255, 179, 0, 0.15); color: var(--yellow); border-color: var(--yellow); }
@@ -110,7 +120,7 @@
             transform: translateX(-50%);
             width: calc(100% - 32px); max-width: 550px;
             background: var(--surface-float);
-            backdrop-filter: blur(18px); /* Mais blur, mais 'glass' */
+            backdrop-filter: blur(18px); 
             border-radius: var(--radius-xl);
             box-shadow: var(--shadow-float);
             padding: 20px;
@@ -124,9 +134,8 @@
 
         .route-summary { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
         .route-main-info { display: flex; flex-direction: column; }
-        .route-main-info span { display: block; }
 
-        .route-distance { font-weight: 800; font-size: 26px; color: var(--orange); } /* Destaque na distância/tempo */
+        .route-distance { font-weight: 800; font-size: 26px; color: var(--orange); } 
 
         .route-time {
             font-size: 16px; 
@@ -138,7 +147,7 @@
             font-size: 13px; font-weight: 700;
             padding: 8px 16px; border-radius: 999px; text-transform: uppercase;
             border: 1px solid transparent;
-            min-width: 130px; /* Estabilizar largura */
+            min-width: 130px; 
             text-align: center;
             letter-spacing: 0.5px;
         }
@@ -161,7 +170,7 @@
             flex: 1; border-radius: var(--radius-l); border: 1px solid var(--border-dark);
             background: var(--surface-dark); 
             color: var(--text-light);
-            font-size: 14px; padding: 10px 0; /* Padding vertical */
+            font-size: 14px; padding: 10px 0; 
             display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px;
             cursor: pointer;
             transition: var(--transition);
@@ -186,6 +195,7 @@
             padding: 10px;
             cursor: pointer;
             transition: var(--transition);
+            display: flex; justify-content: center; align-items: center; gap: 8px;
         }
         
         .alternatives-btn:hover { background: #3a3a3a; }
@@ -195,7 +205,7 @@
             width: 100%; border: none; border-radius: var(--radius-l);
             background: var(--orange); 
             color: var(--bg-dark); font-weight: 700; font-size: 18px; 
-            padding: 16px; /* Aumento sutil */
+            padding: 16px; 
             cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 10px;
             box-shadow: 0 4px 10px rgba(255, 117, 31, 0.4);
@@ -207,7 +217,7 @@
         /* ======= BOTÕES FLUTUANTES (SOS + REPORT + CENTRALIZAR) (Refinado) ======= */
         .alert-btn, .center-btn, .sos-btn {
             position: absolute;
-            width: 50px; height: 50px; /* Mais compacto */
+            width: 50px; height: 50px; 
             border-radius: 50%; border: none;
             display: flex; align-items: center; justify-content: center;
             box-shadow: var(--shadow-float);
@@ -226,7 +236,7 @@
         
         /* Botão Centralizar */
         .center-btn { 
-            top: 100px; /* Posicionamento ajustado */
+            top: 100px; 
             right: 20px;
             background: var(--surface-float);
             backdrop-filter: blur(8px);
@@ -240,7 +250,7 @@
         /* Estilos do Modal (MANTIDOS E ADAPTADOS) */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); /* Overlay mais escuro */
+            background: rgba(0,0,0,0.95); 
             display: none; align-items: center; justify-content: center;
             z-index: 50;
             opacity: 0;
@@ -281,12 +291,14 @@
         }
 
         .type-selection {
-            display: flex; gap: 10px;
+            display: flex; flex-wrap: wrap; gap: 10px;
             margin-bottom: 20px;
         }
 
         .modal .type-option {
-            flex: 1; border: 2px solid var(--border-dark); border-radius: var(--radius-l);
+            flex: 1 1 calc(50% - 5px); /* Dois por linha em telas pequenas/médias */
+            min-width: 100px;
+            border: 2px solid var(--border-dark); border-radius: var(--radius-l);
             background: var(--bg-dark);
             padding: 12px 10px; text-align: center;
             cursor: pointer;
@@ -337,7 +349,7 @@
         
         /* Marcadores de Risco/Incidente (Melhorados) */
         .incident-marker {
-            font-size: 30px; /* Mais visível */
+            font-size: 30px; 
             filter: drop-shadow(0 0 5px rgba(0,0,0,0.9));
             cursor: pointer;
             transition: transform 0.1s;
@@ -351,554 +363,570 @@
              .mode-btn i { font-size: 16px; }
 
              .destino-box {
-            height: 50px;
-        }
+                height: 50px;
+             }
         }
     </style>
 </head>
 
 <body>
 
-<div id="map"></div>
+    <div id="map"></div>
 
-<div class="top-container">
-    <div class="destino-box">
-        <i class="fa-solid fa-location-dot"></i>
-        <input id="destinoInput" type="text" placeholder="Para onde você quer ir?">
-        <i class="fa-solid fa-arrow-right"></i>
-    </div>
-    <div class="risk-alert" id="riskAlert"></div>
-</div>
-
-<div class="bottom-panel hidden" id="bottomPanel">
-    <div class="route-summary">
-        <div class="route-main-info">
-            <span class="route-distance" id="routeDistance">-- km</span>
-            <span class="route-time" id="routeTime">-- min • Carro</span>
+    <div class="top-container">
+        <div class="destino-box">
+            <i class="fa-solid fa-location-dot"></i>
+            <input id="destinoInput" type="text" placeholder="Para onde você quer ir?">
+            <i class="fa-solid fa-arrow-right"></i>
         </div>
-        <div class="route-risk-chip" id="routeRiskChip">RISCO N/A</div>
+        <div class="risk-alert" id="riskAlert"></div>
     </div>
 
-    <div class="mode-and-alternatives">
-        <div class="mode-selection">
-            <button class="mode-btn active" data-profile="mapbox/driving">
-                <i class="fa-solid fa-car-side"></i> Carro
-            </button>
-            <button class="mode-btn" data-profile="mapbox/cycling">
-                <i class="fa-solid fa-bicycle"></i> Bike
-            </button>
-            <button class="mode-btn" data-profile="mapbox/walking">
-                <i class="fa-solid fa-person-walking"></i> A pé
-            </button>
-            <button class="mode-btn" data-profile="mapbox/public-transport">
-                <i class="fa-solid fa-bus"></i> Público
+    <div class="bottom-panel hidden" id="bottomPanel">
+        <div class="route-summary">
+            <div class="route-main-info">
+                <span class="route-distance" id="routeDistance">-- km</span>
+                <span class="route-time" id="routeTime">-- min • Carro</span>
+            </div>
+            <div class="route-risk-chip" id="routeRiskChip">RISCO N/A</div>
+        </div>
+
+        <div class="mode-and-alternatives">
+            <div class="mode-selection">
+                <button class="mode-btn active" data-profile="mapbox/driving">
+                    <i class="fa-solid fa-car-side"></i> Carro
+                </button>
+                <button class="mode-btn" data-profile="mapbox/cycling">
+                    <i class="fa-solid fa-bicycle"></i> Bike
+                </button>
+                <button class="mode-btn" data-profile="mapbox/walking">
+                    <i class="fa-solid fa-person-walking"></i> A pé
+                </button>
+                <button class="mode-btn" data-profile="mapbox/public-transport">
+                    <i class="fa-solid fa-bus"></i> Público
+                </button>
+            </div>
+            
+            <button class="alternatives-btn" id="alternativesBtn">
+                 <i class="fa-solid fa-route"></i> Ver Rotas Alternativas (Risco)
             </button>
         </div>
-        
-        <button class="alternatives-btn" id="alternativesBtn">
-             <i class="fa-solid fa-route"></i> Ver Rotas Alternativas
+
+        <button class="start-btn" id="startBtn">
+            <i class="fa-solid fa-location-arrow"></i> INICIAR NAVEGAÇÃO
         </button>
     </div>
 
-    <button class="start-btn" id="startBtn">
-        <i class="fa-solid fa-location-arrow"></i> INICIAR NAVEGAÇÃO
+    <button class="center-btn" id="centerBtn" title="Centralizar Localização">
+        <i class="fa-solid fa-location-crosshairs"></i>
     </button>
-</div>
 
-<button class="center-btn" id="centerBtn" title="Centralizar Localização">
-    <i class="fa-solid fa-location-crosshairs"></i>
-</button>
+    <button class="alert-btn" id="alertBtn" title="Relatar incidente em tempo real">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+    </button>
 
-<button class="alert-btn" id="alertBtn" title="Relatar incidente em tempo real">
-    <i class="fa-solid fa-triangle-exclamation"></i>
-</button>
+    <button class="sos-btn" id="sosBtn" title="Botão de Emergência SOS">
+        <i class="fa-solid fa-bell"></i>
+    </button>
 
-<button class="sos-btn" id="sosBtn" title="Botão de Emergência SOS">
-    <i class="fa-solid fa-bell"></i>
-</button>
+    <div class="modal-overlay" id="modalIncident">
+        <div class="modal">
+            <h2><i class="fa-solid fa-shield-halved"></i> Reportar Incidente</h2>
 
-<div class="modal-overlay" id="modalIncident">
-    <div class="modal">
-        <h2><i class="fa-solid fa-shield-halved"></i> Reportar Incidente</h2>
-
-        <label for="inpTipoIncidente">O que você está reportando?</label>
-        <div class="type-selection" id="inpTipoIncidente">
-            <div class="type-option" data-type="1">
-                <i class="fa-solid fa-police-car"></i> <span>Polícia / Fiscalização</span>
+            <label for="inpTipoIncidente">O que você está reportando?</label>
+            <div class="type-selection" id="inpTipoIncidente">
+                <div class="type-option" data-type="1">
+                    <i class="fa-solid fa-police-car"></i> <span>Polícia</span>
+                </div>
+                <div class="type-option" data-type="2">
+                    <i class="fa-solid fa-camera-cctv"></i> <span>Radar</span>
+                </div>
+                <div class="type-option" data-type="3">
+                    <i class="fa-solid fa-car-crash"></i> <span>Acidente</span>
+                </div>
+                <div class="type-option" data-type="4">
+                    <i class="fa-solid fa-gun"></i> <span>Perigo / Assalto</span>
+                </div>
             </div>
-            <div class="type-option" data-type="2">
-                <i class="fa-solid fa-camera-cctv"></i> <span>Radar / Câmera</span>
-            </div>
-            <div class="type-option" data-type="3">
-                <i class="fa-solid fa-car-crash"></i> <span>Acidente / Bloqueio</span>
-            </div>
-            <div class="type-option" data-type="4">
-                <i class="fa-solid fa-gun"></i> <span>Assalto / Perigo</span>
-            </div>
-        </div>
-        
-        <label for="inpComentIncidente">Detalhes (opcional)</label>
-        <textarea id="inpComentIncidente" placeholder="Descreva o que está acontecendo: Trânsito lento, bloqueio, etc."></textarea>
+            <label for="inpComentIncidente">Detalhes (opcional)</label>
+            <textarea id="inpComentIncidente" placeholder="Descreva o que está acontecendo: Trânsito lento, bloqueio, etc."></textarea>
 
-        <div class="actions">
-            <button class="btn btn-cancel" id="btnCancelarIncidente">CANCELAR</button>
-            <button class="btn btn-send" id="btnEnviarIncidente">ENVIAR REPORTE</button>
+            <div class="actions">
+                <button class="btn btn-cancel" id="btnCancelarIncidente">CANCELAR</button>
+                <button class="btn btn-send" id="btnEnviarIncidente">ENVIAR REPORTE</button>
+            </div>
         </div>
     </div>
-</div>
 
-<script src="https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js"></script>
-<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js"></script>
-<script>
-    // Variáveis Mapbox, tokens e configuração inicial (Mantidas)
-    const API_BASE = window.location.origin;
-    mapboxgl.accessToken = "pk.eyJ1IjoibWlndXdsMDI4NyIsImEiOiJjbWl3bTRsa3MyY3Y3M2Rwd3VtM3ZleGdrIn0.uTdjZpweZcDh9qfm89TyZw"; 
-    
-    let userOrigin = null;
-    let riskMarkers = [];
-    let incidentMarkers = [];
-    let currentProfile = "mapbox/driving"; 
-    
-    // VARIÁVEL DE ESTADO PARA O RASTREAMENTO
-    let isTracking = true;
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.js"></script>
+    <script>
+        // --- CONFIGURAÇÃO INICIAL E VARIÁVEIS ---
+        mapboxgl.accessToken = "pk.eyJ1IjoibWlndXdsMDI4NyIsImEiOiJjbWl3bTRsa3MyY3Y3M2Rwd3VtM3ZleGdrIn0.uTdjZpweZcDh9qfm89TyZw"; 
+        let userOrigin = null;
+        let riskMarkers = [];
+        let incidentMarkers = [];
+        let currentProfile = "mapbox/driving"; 
+        let isTracking = true; // Controla se o mapa deve seguir o usuário
 
-    // Mapeamento de Geoárea de Alto Risco (Mantido)
-    const HIGH_RISK_AREAS = [
-        {
-            name: "Paraisópolis",
-            center: [-46.7238, -23.6067], // Longitude, Latitude de Paraisópolis (SP)
-            radiusKm: 1.5,
-            emoji: '🚨' 
-        },
-        // Adicione outras áreas aqui, se necessário
-    ];
-
-    // Configuração do Mapa
-    const map = new mapboxgl.Map({
-        container: "map",
-        style: "mapbox://styles/miguwl0287/cmixney1h001501s111340npb", 
-        center: [-46.633, -23.550], // Centro inicial será ajustado pelo Geolocate
-        zoom: 15
-    });
-
-    const directions = new MapboxDirections({
-        accessToken: mapboxgl.accessToken,
-        unit: "metric",
-        profile: currentProfile,
-        controls: false,
-        routeLine: {
-            strokeColor: '#ff751f', 
-            strokeWidth: 6
-        }
-    });
-
-    map.addControl(directions, "top-left");
-
-    // Geolocalização (MODIFICADO)
-    const geo = new mapboxgl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: true,
-        showUserHeading: true,
-        // Configuração importante para iniciar o rastreamento automaticamente:
-        // set the default position to be tracked, ensuring map follows the user
-        showUserLocation: true 
-    });
-    
-    map.addControl(geo); // Adiciona o controle ao mapa
-
-    // ===================================
-    // FUNÇÕES CORE (AJUSTADAS)
-    // ===================================
-
-    // ... (funções getIncidentEmoji, drawRiskAreaCircle, loadIncidents, requestRouteTo, updateRouteInfo, analyzeRouteRisk, profileLabel mantidas inalteradas) ...
-
-    function getIncidentEmoji(typeId) {
-        switch (typeId) {
-            case 1: return '🚓'; 
-            case 2: return '📸'; 
-            case 3: return '💥'; 
-            case 4: return '🔪'; 
-            default: return '❓';
-        }
-    }
-
-    function drawRiskAreaCircle() {
-        HIGH_RISK_AREAS.forEach(area => {
-            const point = {
-                type: 'Feature',
-                geometry: {
-                    type: 'Point',
-                    coordinates: area.center
-                },
-                properties: {}
-            };
-
-            map.on('load', () => {
-                if (map.getSource(`point-${area.name}`)) return; 
-                
-                map.addSource(`point-${area.name}`, {
-                    'type': 'geojson',
-                    'data': point
-                });
-
-                map.addLayer({
-                    'id': `risk-circle-${area.name}`,
-                    'type': 'circle',
-                    'source': `point-${area.name}`,
-                    'paint': {
-                        'circle-color': 'var(--red)',
-                        'circle-opacity': 0.15,
-                        'circle-stroke-width': 2,
-                        'circle-stroke-color': 'var(--red)',
-                        'circle-radius': [
-                            'interpolate', ['linear'], ['zoom'],
-                            10, 0, 
-                            13, 35, 
-                            15, 80, 
-                            17, 180 
-                        ]
-                    }
-                }, 'water'); 
-
-                const el = document.createElement("div");
-                el.className = 'incident-marker';
-                el.textContent = area.emoji;
-                el.title = `Área de Alto Risco: ${area.name}`; 
-
-                new mapboxgl.Marker(el, { anchor: 'bottom' })
-                    .setLngLat(area.center)
-                    .addTo(map);
-            });
-        });
-    }
-
-    function loadIncidents() {
-        const simulatedIncidents = [
-            { id: 1, lat: -23.555, lng: -46.640, type_id: 1, comment: "Polícia na esquina" },
-            { id: 2, lat: -23.548, lng: -46.630, type_id: 2, comment: "Radar fixo" },
-            { id: 3, lat: -23.560, lng: -46.625, type_id: 3, comment: "Batida leve" },
-            { id: 4, lat: -23.550, lng: -46.615, type_id: 4, comment: "Movimento estranho" } 
+        // Simulação de Áreas de Alto Risco (usadas para desenhar círculos no mapa)
+        const HIGH_RISK_AREAS = [
+            {
+                name: "Paraisópolis",
+                center: [-46.7238, -23.6067], 
+                radiusKm: 1.5,
+                emoji: '🚨' 
+            },
+            {
+                name: "Rua Vergueiro",
+                center: [-46.6350, -23.5700], 
+                radiusKm: 0.8,
+                emoji: '⚠️' 
+            }
         ];
 
-        incidentMarkers.forEach(m => m.remove());
-        incidentMarkers = [];
-
-        simulatedIncidents.forEach(p => {
-            const emoji = getIncidentEmoji(p.type_id);
-            const el = document.createElement("div");
-            el.className = 'incident-marker';
-            el.textContent = emoji;
-            el.title = `${emoji} ${p.comment}`; 
-
-            const marker = new mapboxgl.Marker(el, { anchor: 'bottom' })
-                .setLngLat([p.lng, p.lat])
-                .addTo(map);
-
-            incidentMarkers.push(marker);
+        // Inicialização do Mapa
+        const map = new mapboxgl.Map({
+            container: "map",
+            style: "mapbox://styles/miguwl0287/cmixney1h001501s111340npb", // Estilo Dark
+            center: [-46.633, -23.550], 
+            zoom: 15
         });
-    }
-    
-    function requestRouteTo(destinoTexto) {
-         if (!userOrigin) {
-             navigator.geolocation.getCurrentPosition(pos => {
-                 userOrigin = [pos.coords.longitude, pos.coords.latitude];
+
+        // Inicialização do Directions (apenas para calcular a rota e desenhar a linha)
+        const directions = new MapboxDirections({
+            accessToken: mapboxgl.accessToken,
+            unit: "metric",
+            profile: currentProfile,
+            controls: false, // Oculta todos os controles nativos
+            routeLine: {
+                strokeColor: 'var(--orange)', 
+                strokeWidth: 6
+            }
+        });
+        map.addControl(directions, "top-left"); 
+
+        // Controle de Geolocalização (GPS Nativo em Tempo Real)
+        const geo = new mapboxgl.GeolocateControl({
+            positionOptions: { enableHighAccuracy: true },
+            trackUserLocation: true, // Habilita o rastreamento em tempo real
+            showUserHeading: true, // Mostra a direção do usuário
+            showUserLocation: true 
+        });
+        map.addControl(geo); 
+
+        // --- FUNÇÕES DE AUXÍLIO ---
+
+        function getIncidentEmoji(typeId) {
+            switch (typeId) {
+                case 1: return '🚓'; 
+                case 2: return '📸'; 
+                case 3: return '💥'; 
+                case 4: return '🔪'; 
+                default: return '❓';
+            }
+        }
+
+        // Desenha círculos para Áreas de Alto Risco (Círculos Coloridos com Emojis)
+        function drawRiskAreaCircle() {
+            HIGH_RISK_AREAS.forEach(area => {
+                const point = {
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Point',
+                        coordinates: area.center
+                    },
+                    properties: {}
+                };
+
+                map.on('load', () => {
+                    // Previne duplicação
+                    if (map.getSource(`point-${area.name}`)) return; 
+                    
+                    map.addSource(`point-${area.name}`, {
+                        'type': 'geojson',
+                        'data': point
+                    });
+
+                    // Camada do Círculo de Risco
+                    map.addLayer({
+                        'id': `risk-circle-${area.name}`,
+                        'type': 'circle',
+                        'source': `point-${area.name}`,
+                        'paint': {
+                            'circle-color': 'var(--red)',
+                            'circle-opacity': 0.15,
+                            'circle-stroke-width': 2,
+                            'circle-stroke-color': 'var(--red)',
+                            'circle-radius': [
+                                'interpolate', ['linear'], ['zoom'],
+                                10, 0, 
+                                13, 35, // Raio menor no zoom 13
+                                15, 80, // Raio médio no zoom 15
+                                17, 180 // Raio maior no zoom 17
+                            ]
+                        }
+                    }, 'water'); // Adiciona antes das camadas de água para não cobrir tudo
+
+                    // Marcador Emoji para o Centro da Área
+                    const el = document.createElement("div");
+                    el.className = 'incident-marker';
+                    el.textContent = area.emoji;
+                    el.title = `Área de Alto Risco: ${area.name}`; 
+
+                    new mapboxgl.Marker(el, { anchor: 'bottom' })
+                        .setLngLat(area.center)
+                        .addTo(map);
+                });
+            });
+        }
+
+        // Carrega Incidentes Reportados (Simulado)
+        function loadIncidents() {
+            // SIMULAÇÃO: Incidentes de alto e baixo risco.
+            const simulatedIncidents = [
+                { id: 1, lat: -23.555, lng: -46.640, type_id: 1, comment: "Polícia na esquina" },
+                { id: 2, lat: -23.548, lng: -46.630, type_id: 2, comment: "Radar fixo" },
+                { id: 3, lat: -23.560, lng: -46.625, type_id: 3, comment: "Batida leve" },
+                { id: 4, lat: -23.550, lng: -46.615, type_id: 4, comment: "Movimento estranho (Alto Risco)" } 
+            ];
+
+            incidentMarkers.forEach(m => m.remove());
+            incidentMarkers = [];
+
+            simulatedIncidents.forEach(p => {
+                const emoji = getIncidentEmoji(p.type_id);
+                const el = document.createElement("div");
+                el.className = 'incident-marker';
+                el.textContent = emoji;
+                el.title = `${emoji} ${p.comment}`; 
+
+                const marker = new mapboxgl.Marker(el, { anchor: 'bottom' })
+                    .setLngLat([p.lng, p.lat])
+                    .addTo(map);
+
+                incidentMarkers.push(marker);
+            });
+        }
+        
+        // Solicita o cálculo da rota
+        function requestRouteTo(destinoTexto) {
+             if (!userOrigin) {
+                 // Tenta obter a localização se ainda não tiver
+                 navigator.geolocation.getCurrentPosition(pos => {
+                     userOrigin = [pos.coords.longitude, pos.coords.latitude];
+                     directions.setOrigin(userOrigin);
+                     directions.setDestination(destinoTexto);
+                 }, () => {
+                     alert("Não foi possível obter sua localização. Tente ativar o GPS.");
+                 });
+             } else {
                  directions.setOrigin(userOrigin);
                  directions.setDestination(destinoTexto);
-             }, () => {
-                 alert("Não foi possível obter sua localização. Tente ativar o GPS.");
-             });
-         } else {
-             directions.setOrigin(userOrigin);
-             directions.setDestination(destinoTexto);
+             }
          }
-     }
-     
-     function updateRouteInfo(route) {
-         const distKm = route.distance / 1000;
-         const durMin = route.duration / 60;
+        
+        // Atualiza a interface com informações da rota (distância/tempo)
+        function updateRouteInfo(route) {
+             const distKm = route.distance / 1000;
+             const durMin = route.duration / 60;
 
-         routeDistanceEl.textContent = distKm.toFixed(1) + " km";
-         routeTimeEl.textContent = Math.round(durMin) + " min • " + profileLabel(currentProfile);
-         bottomPanel.classList.remove("hidden");
-         routeRiskChip.textContent = "ANALISANDO...";
-         routeRiskChip.className = "route-risk-chip";
-         riskAlert.style.display = "block";
-         riskAlert.className = "risk-alert";
-         riskAlert.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Analisando rota segura...';
-         
-         riskMarkers.forEach(m => m.remove());
-         riskMarkers = [];
-     }
+             routeDistanceEl.textContent = distKm.toFixed(1) + " km";
+             routeTimeEl.textContent = Math.round(durMin) + " min • " + profileLabel(currentProfile);
+             bottomPanel.classList.remove("hidden");
+             
+             // Reseta o estado do alerta para "Analisando..."
+             routeRiskChip.textContent = "ANALISANDO...";
+             routeRiskChip.className = "route-risk-chip";
+             riskAlert.style.display = "block";
+             riskAlert.className = "risk-alert";
+             riskAlert.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Analisando rota segura...';
+             
+             riskMarkers.forEach(m => m.remove());
+             riskMarkers = [];
+         }
 
-    async function analyzeRouteRisk() {
-        const origin = directions.getOrigin()?.geometry?.coordinates;
-        const dest = directions.getDestination()?.geometry?.coordinates;
+        // Simulação da Análise de Risco (Deveria ser uma API real)
+        async function analyzeRouteRisk() {
+            const origin = directions.getOrigin()?.geometry?.coordinates;
+            const dest = directions.getDestination()?.geometry?.coordinates;
 
-        if (!origin || !dest) return;
+            if (!origin || !dest) return;
 
-        try {
-            await new Promise(r => setTimeout(r, 1000)); 
+            try {
+                // Simula um delay da requisição API
+                await new Promise(r => setTimeout(r, 1500)); 
 
-            const riscoSimulado = Math.random() * 10;
-            const data = { 
-                risk_score: riscoSimulado,
-                risk_points: [
-                    { lat: -23.550, lng: -46.635, risk_score: 8.0 },
-                    { lat: -23.558, lng: -46.630, risk_score: 3.5 }
-                ]
-            };
-            
-            const risco = data.risk_score;
-            const points = data.risk_points || [];
+                // SIMULAÇÃO DE DADOS DE RISCO
+                const riscoSimulado = Math.random() * 10; 
+                const data = { 
+                    risk_score: riscoSimulado,
+                    risk_points: [
+                        { lat: -23.550, lng: -46.635, risk_score: 8.0 }, // Ponto de alto risco
+                        { lat: -23.558, lng: -46.630, risk_score: 3.5 }  // Ponto de baixo risco
+                    ]
+                };
+                
+                const risco = data.risk_score;
+                const points = data.risk_points || [];
 
-            let chipClass = "";
-            let chipText = "";
-            let alertIcon = "";
-            let alertMsg = "";
+                let chipClass = "";
+                let chipText = "";
+                let alertIcon = "";
+                let alertMsg = "";
 
-            if (risco == null) {
-                 alertMsg = "Risco não disponível para esta rota.";
-                 chipText = "RISCO N/D";
-            } else if (risco < 4) {
-                 riskAlert.classList.add("low");
-                 alertIcon = '<i class="fa-solid fa-shield-halved"></i>';
-                 alertMsg = 'Rota com <strong>BAIXO risco</strong> médio.';
-                 chipClass = "chip-low";
-                 chipText = "BAIXO RISCO";
-            } else if (risco < 7.5) {
-                 riskAlert.classList.add("moderate");
-                 alertIcon = '<i class="fa-solid fa-triangle-exclamation"></i>';
-                 alertMsg = 'Rota com risco <strong>MODERADO</strong>. Fique atento.';
-                 chipClass = "chip-mod";
-                 chipText = "RISCO MODERADO";
-            } else {
-                 riskAlert.classList.add("high");
-                 alertIcon = '<i class="fa-solid fa-skull-crossbones"></i>';
-                 alertMsg = 'Rota com <strong>ALTO risco</strong>. Evite se possível.';
-                 chipClass = "chip-high";
-                 chipText = "ALTO RISCO";
+                if (risco < 4) {
+                    riskAlert.classList.add("low");
+                    alertIcon = '<i class="fa-solid fa-shield-halved"></i>';
+                    alertMsg = 'Rota com <strong>BAIXO risco</strong> médio.';
+                    chipClass = "chip-low";
+                    chipText = "BAIXO RISCO";
+                } else if (risco < 7.5) {
+                    riskAlert.classList.add("moderate");
+                    alertIcon = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                    alertMsg = 'Rota com risco <strong>MODERADO</strong>. Fique atento.';
+                    chipClass = "chip-mod";
+                    chipText = "RISCO MODERADO";
+                } else {
+                    riskAlert.classList.add("high");
+                    alertIcon = '<i class="fa-solid fa-skull-crossbones"></i>';
+                    alertMsg = 'Rota com <strong>ALTO risco</strong>. Considere uma alternativa.';
+                    chipClass = "chip-high";
+                    chipText = "ALTO RISCO";
+                }
+
+                // Atualiza os elementos de UI
+                riskAlert.innerHTML = alertIcon + " " + alertMsg;
+                routeRiskChip.textContent = chipText || "RISCO N/A";
+                routeRiskChip.className = "route-risk-chip " + (chipClass || "");
+                
+                // Adiciona marcadores de pontos de risco na rota (pontos coloridos)
+                points.forEach(p => {
+                    const color = p.risk_score >= 7.5 ? "var(--red)"
+                                     : p.risk_score >= 4 ? "var(--yellow)"
+                                     : "var(--green)";
+
+                    const el = document.createElement("div");
+                    el.style.cssText = `
+                        width: 14px; 
+                        height: 14px; 
+                        border-radius: 50%;
+                        background: ${color};
+                        border: 2px solid ${color};
+                        box-shadow: 0 0 5px ${color}; 
+                        opacity: 0.8;
+                    `; 
+                    el.title = `Nível de Risco: ${p.risk_score.toFixed(1)}`; 
+
+                    const marker = new mapboxgl.Marker(el)
+                        .setLngLat([p.lng, p.lat])
+                        .addTo(map);
+
+                    riskMarkers.push(marker);
+                });
+
+            } catch (err) {
+                console.error(err);
+                riskAlert.className = "risk-alert moderate";
+                riskAlert.innerHTML = '<i class="fa-solid fa-exclamation-circle"></i> Erro ao analisar risco da rota.';
+                routeRiskChip.textContent = "ERRO";
+                routeRiskChip.className = "route-risk-chip chip-mod";
             }
+        }
 
-            riskAlert.innerHTML = alertIcon + " " + alertMsg;
-            routeRiskChip.textContent = chipText || "RISCO N/A";
-            routeRiskChip.className = "route-risk-chip " + (chipClass || "");
-            
-            points.forEach(p => {
-                 const color = p.risk_score >= 7.5 ? "var(--red)"
-                              : p.risk_score >= 4 ? "var(--yellow)"
-                              : "var(--green)";
+        function profileLabel(profile) {
+            switch (profile) {
+                case "mapbox/driving": return "Carro";
+                case "mapbox/cycling": return "Bike";
+                case "mapbox/walking": return "A pé";
+                case "mapbox/public-transport": return "Público";
+                default: return "Rota";
+            }
+        }
 
-                 const el = document.createElement("div");
-                 el.style.width = "14px"; 
-                 el.style.height = "14px"; 
-                 el.style.borderRadius = "50%";
-                 el.style.background = color;
-                 el.style.boxShadow = "0 0 10px " + color; 
-                 el.title = `Nível de Risco: ${p.risk_score.toFixed(1)}`; 
+        // --- REFERÊNCIAS DOM ---
+        const destinoInput = document.getElementById("destinoInput");
+        const riskAlert = document.getElementById("riskAlert");
+        const bottomPanel = document.getElementById("bottomPanel");
+        const routeDistanceEl = document.getElementById("routeDistance");
+        const routeTimeEl = document.getElementById("routeTime");
+        const routeRiskChip = document.getElementById("routeRiskChip");
+        const startBtn = document.getElementById("startBtn");
+        const modeButtons = document.querySelectorAll(".mode-btn");
+        const sosBtn = document.getElementById("sosBtn");
+        const centerBtn = document.getElementById("centerBtn"); 
+        const modalIncident = document.getElementById("modalIncident");
+        const alertBtn = document.getElementById("alertBtn");
+        const btnCancelarIncidente = document.getElementById("btnCancelarIncidente");
+        const btnEnviarIncidente = document.getElementById("btnEnviarIncidente");
+        const typeOptions = document.querySelectorAll(".type-option");
+        const alternativesBtn = document.getElementById("alternativesBtn"); 
+        
+        let selectedType = null;
 
-                 const marker = new mapboxgl.Marker(el)
-                     .setLngLat([p.lng, p.lat])
-                     .addTo(map);
+        // --- LISTENERS DE EVENTOS MAPBOX ---
 
-                 riskMarkers.push(marker);
+        map.on("load", () => {
+            directions.on("route", (e) => {
+                if (!e.route || !e.route[0]) return;
+                const route = e.route[0];
+                updateRouteInfo(route);
+                analyzeRouteRisk();
             });
+            
+            loadIncidents(); 
+            drawRiskAreaCircle(); 
+        });
 
-        } catch (err) {
-            console.error(err);
-            riskAlert.className = "risk-alert moderate";
-            riskAlert.innerHTML = '<i class="fa-solid fa-exclamation-circle"></i> Erro ao analisar risco da rota.';
-            routeRiskChip.textContent = "ERRO";
-            routeRiskChip.className = "route-risk-chip chip-mod";
-        }
-    }
+        // Evento de localização do usuário
+        geo.on("geolocate", (e) => {
+            userOrigin = [e.coords.longitude, e.coords.latitude];
+            // Se o rastreamento estiver ativo, centraliza o mapa no usuário
+            if (isTracking) {
+                map.flyTo({ 
+                    center: userOrigin, 
+                    zoom: 16, 
+                    essential: true,
+                    speed: 1,
+                    curve: 1 
+                });
+            }
+        });
 
-    function profileLabel(profile) {
-        switch (profile) {
-            case "mapbox/driving": return "Carro";
-            case "mapbox/cycling": return "Bike";
-            case "mapbox/walking": return "A pé";
-            case "mapbox/public-transport": return "Público";
-            default: return "Rota";
-        }
-    }
+        // Evento de arrastar o mapa (cancela o rastreamento automático)
+        map.on('dragstart', () => {
+            isTracking = false;
+            centerBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>'; 
+        });
 
+        // --- LISTENERS DE EVENTOS DA INTERFACE ---
 
-    // ===================================
-    // DOM & EVENT LISTENERS
-    // ===================================
+        // Botão Centralizar
+        centerBtn.addEventListener("click", () => {
+            if (userOrigin) {
+                isTracking = true; // Reativa o rastreamento
+                // Feedback visual de rastreando: 
+                centerBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs fa-spin"></i>'; 
+                map.flyTo({ 
+                    center: userOrigin, 
+                    zoom: 16, 
+                    essential: true,
+                    speed: 1
+                });
 
-    const destinoInput = document.getElementById("destinoInput");
-    const riskAlert = document.getElementById("riskAlert");
-    const bottomPanel = document.getElementById("bottomPanel");
-    const routeDistanceEl = document.getElementById("routeDistance");
-    const routeTimeEl = document.getElementById("routeTime");
-    const routeRiskChip = document.getElementById("routeRiskChip");
-    const startBtn = document.getElementById("startBtn");
-    const modeButtons = document.querySelectorAll(".mode-btn");
-    const sosBtn = document.getElementById("sosBtn");
-    const centerBtn = document.getElementById("centerBtn"); 
-    const modalIncident = document.getElementById("modalIncident");
-    const alertBtn = document.getElementById("alertBtn");
-    const btnCancelarIncidente = document.getElementById("btnCancelarIncidente");
-    const btnEnviarIncidente = document.getElementById("btnEnviarIncidente");
-    const typeOptions = document.querySelectorAll(".type-option");
-    const alternativesBtn = document.getElementById("alternativesBtn"); 
-    
-    let selectedType = null;
-
-    map.on("load", () => {
-        // NÃO PRECISA DE geo.trigger() AQUI, POIS setRerenderWorld: true forçará o início
-
-        directions.on("route", (e) => {
-            if (!e.route || !e.route[0]) return;
-            const route = e.route[0];
-            updateRouteInfo(route);
-            analyzeRouteRisk();
+                // Remove o spinner após 1 segundo (tempo do flyTo)
+                setTimeout(() => {
+                     if(isTracking) centerBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
+                }, 1000);
+            } else {
+                alert("Localização não disponível. Ative o GPS ou aguarde a primeira leitura.");
+            }
         });
         
-        loadIncidents();
-        drawRiskAreaCircle(); 
-    });
-    
-    // NOVO: EVENTO para capturar a localização e garantir o rastreamento
-    geo.on("geolocate", (e) => {
-        userOrigin = [e.coords.longitude, e.coords.latitude];
-        
-        // Se o rastreamento estiver ativo, centraliza e mantém o mapa seguindo o usuário
-        if (isTracking) {
-             map.flyTo({ 
-                 center: userOrigin, 
-                 zoom: 16, 
-                 essential: true,
-                 speed: 1,
-                 curve: 1 // Voo suave
-             });
-        }
-    });
-    
-    // Novo: Ao interagir com o mapa (arrastar), o rastreamento automático é desativado
-    map.on('dragstart', () => {
-        isTracking = false;
-        centerBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>'; // Sugere que o rastreamento parou
-    });
-
-    // Centralizar Localização (MODIFICADO)
-    centerBtn.addEventListener("click", () => {
-        if (userOrigin) {
-            isTracking = true; // Reativa o rastreamento
-            centerBtn.innerHTML = '<i class="fa-solid fa-location-crosshairs fa-spin"></i>'; // Feedback visual de rastreando
-            map.flyTo({ 
-                center: userOrigin, 
-                zoom: 16, 
-                essential: true,
-                speed: 1
-            });
-            // O evento 'geolocate' acima continuará o rastreamento
-        } else {
-            alert("Localização não disponível. Ative o GPS ou aguarde a primeira leitura.");
-        }
-    });
-
-    // ... (restante dos event listeners mantidos inalterados) ...
-
-    // Botão SOS
-    sosBtn.addEventListener("click", () => {
-        if (userOrigin) {
-            alert(`🚨 SOS: Alerta de emergência! Sua localização (${userOrigin.join(", ")}) foi enviada às autoridades. Mantenha a calma.`);
-        } else {
-            alert("🚨 SOS: Localização indisponível. Tente ligar diretamente para o 190 ou 193.");
-        }
-    });
-
-    // Input Destino
-    destinoInput.addEventListener("keyup", (e) => {
-        if (e.key === "Enter" && destinoInput.value.trim() !== "") {
-            requestRouteTo(destinoInput.value.trim());
-        }
-    });
-
-    // Troca de modo de transporte
-    modeButtons.forEach(btn => {
-        btn.addEventListener("click", () => {
-            modeButtons.forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            currentProfile = btn.getAttribute("data-profile");
-            
-            if (currentProfile !== "mapbox/public-transport") {
-                directions.setProfile(currentProfile);
-            } else {
-                alert("Modo Transporte Público selecionado. (Requer API externa, simulação em andamento...)");
-            }
-            
-
-            if (destinoInput.value.trim() !== "") {
+        // Input de Destino (Enter)
+        destinoInput.addEventListener("keyup", (e) => {
+            if (e.key === "Enter" && destinoInput.value.trim() !== "") {
                 requestRouteTo(destinoInput.value.trim());
             }
         });
-    });
 
-    // Iniciar Percurso
-    startBtn.addEventListener("click", () => {
-        alert("🟢 Navegação iniciada. Fique atento aos alertas de risco.");
-    });
-    
-    // Rotas Alternativas
-    alternativesBtn.addEventListener("click", () => {
-        alert("🧭 Buscando rotas alternativas mais seguras... (Funcionalidade em desenvolvimento)");
-    });
+        // Seleção de Modo de Transporte
+        modeButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                modeButtons.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                currentProfile = btn.getAttribute("data-profile");
+                
+                if (currentProfile !== "mapbox/public-transport") {
+                    directions.setProfile(currentProfile);
+                } else {
+                    alert("Modo Transporte Público selecionado. (Requer API externa, simulação em andamento...)");
+                }
+                
+                // Recalcula a rota se um destino já estiver definido
+                if (directions.getDestination() || destinoInput.value.trim() !== "") {
+                     // Usa o destino atual do directions ou o texto do input
+                     const destination = directions.getDestination() ? directions.getDestination() : destinoInput.value.trim();
+                     if (destination) {
+                         requestRouteTo(destination);
+                     }
+                }
+            });
+        });
 
-    // Modal de Reporte: Abrir
-    alertBtn.addEventListener("click", () => {
-        selectedType = null;
-        typeOptions.forEach(o => o.classList.remove("selected"));
-        document.getElementById("inpComentIncidente").value = "";
-        modalIncident.classList.add("open");
-    });
-    
-    // Modal de Reporte: Seleção de Tipo
-    typeOptions.forEach(option => {
-        option.addEventListener("click", () => {
+        // Botão Iniciar Navegação
+        startBtn.addEventListener("click", () => {
+            alert("🟢 Navegação iniciada. Você está sendo rastreado e receberá alertas de risco em tempo real.");
+            // Aqui iniciaria a navegação turn-by-turn e os alertas de proximidade de risco
+        });
+        
+        // Botão Ver Rotas Alternativas
+        alternativesBtn.addEventListener("click", () => {
+            alert("Em implementação: Aqui seria exibido um modal/painel lateral com rotas alternativas, destacando o risco de cada uma.");
+        });
+
+        // Botão SOS (Emergência)
+        sosBtn.addEventListener("click", () => {
+            const confirmSos = confirm("ATENÇÃO: Você está prestes a enviar um ALERTA SOS. Seus contatos de emergência e autoridades serão notificados com sua localização atual. Deseja continuar?");
+            if (confirmSos) {
+                 alert("🔴 ALERTA SOS ENVIADO! Ajuda está a caminho. Fique em um local seguro.");
+            }
+        });
+        
+        // Botão Reportar Incidente (Abre Modal)
+        alertBtn.addEventListener("click", () => {
+            selectedType = null;
             typeOptions.forEach(o => o.classList.remove("selected"));
-            option.classList.add("selected");
-            selectedType = Number(option.getAttribute("data-type"));
+            document.getElementById("inpComentIncidente").value = "";
+            modalIncident.classList.add("open");
         });
-    });
 
-    // Modal de Reporte: Fechar
-    btnCancelarIncidente.addEventListener("click", () => {
-        modalIncident.classList.remove("open");
-    });
+        // Seleção de Tipo de Incidente
+        typeOptions.forEach(option => {
+            option.addEventListener("click", () => {
+                typeOptions.forEach(o => o.classList.remove("selected"));
+                option.classList.add("selected");
+                selectedType = Number(option.getAttribute("data-type"));
+            });
+        });
 
-    modalIncident.addEventListener("click", (e) => {
-        if (e.target === modalIncident) modalIncident.classList.remove("open");
-    });
-
-    // Modal de Reporte: Enviar
-    btnEnviarIncidente.addEventListener("click", () => {
-        if (!selectedType) {
-            alert("Selecione o tipo de incidente que está reportando.");
-            return;
-        }
-
-        const coment = document.getElementById("inpComentIncidente").value.trim();
-
-        navigator.geolocation.getCurrentPosition(async pos => {
-            const payload = {
-                latitude: pos.coords.latitude,
-                longitude: pos.coords.longitude,
-                type_id: selectedType, 
-                comment: coment || "Sem detalhes adicionais"
-            };
-
-            console.log("Payload de Reporte:", payload);
-            alert(`✅ Incidente reportado com sucesso! Tipo: ${getIncidentEmoji(selectedType)}`);
+        // Modal de Reporte: Cancelar
+        btnCancelarIncidente.addEventListener("click", () => {
             modalIncident.classList.remove("open");
-            loadIncidents(); 
- 
-        }, () => {
-            alert("Não foi possível obter sua localização para enviar o relato.");
         });
-    });
-</script>
+
+        // Modal de Reporte: Fechar ao clicar no overlay
+        modalIncident.addEventListener("click", (e) => {
+            if (e.target === modalIncident) modalIncident.classList.remove("open");
+        });
+
+        // Modal de Reporte: Enviar
+        btnEnviarIncidente.addEventListener("click", () => {
+            if (!selectedType) {
+                alert("Selecione o tipo de incidente que está reportando.");
+                return;
+            }
+
+            const coment = document.getElementById("inpComentIncidente").value.trim();
+
+            navigator.geolocation.getCurrentPosition(async pos => {
+                const payload = {
+                    latitude: pos.coords.latitude,
+                    longitude: pos.coords.longitude,
+                    type_id: selectedType, 
+                    comment: coment || "Sem detalhes adicionais"
+                };
+
+                console.log("Payload de Reporte (Simulado):", payload);
+                alert(`✅ Incidente reportado com sucesso! Tipo: ${getIncidentEmoji(selectedType)}. O marcador aparecerá no mapa.`);
+                
+                modalIncident.classList.remove("open");
+                loadIncidents(); // Recarrega os incidentes para incluir o novo (simulado)
+    
+            }, () => {
+                alert("Não foi possível obter sua localização para enviar o relato.");
+            });
+        });
+    </script>
 </body>
 </html>
