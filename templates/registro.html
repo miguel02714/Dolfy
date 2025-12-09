@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar — WeSafe</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        :root {
+            --bg: #0d0f12;
+            --card: #1c1f23;
+            --input: #25282d;
+            --text: #e6e6e6;
+            --sub: #9ea3ab;
+            --orange: #ff7f27;
+            --orange-dark: #e96e1d;
+            --radius: 14px;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text);
+        }
+
+        .register-box {
+            width: 100%;
+            max-width: 380px;
+            background: var(--card);
+            padding: 35px 30px;
+            border-radius: var(--radius);
+            box-sizing: border-box;
+        }
+
+        .register-box h2 {
+            margin: 0 0 25px;
+            font-size: 26px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .google-btn {
+            width: 100%;
+            background: #ffffff;
+            color: #000;
+            border: none;
+            padding: 12px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .google-btn i {
+            margin-right: 10px;
+        }
+
+        .separator {
+            text-align: center;
+            color: var(--sub);
+            font-size: 13px;
+            margin: 22px 0;
+            position: relative;
+        }
+
+        .separator::before,
+        .separator::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            width: 36%;
+            height: 1px;
+            background: #2c2f34;
+        }
+        .separator::before { left: 0; }
+        .separator::after { right: 0; }
+
+        .input-box {
+            margin-bottom: 18px;
+            position: relative;
+        }
+
+        .input-box input {
+            width: 80%;
+            padding: 14px 14px 14px 45px;
+            background: var(--input);
+            border: 1px solid #2c2f34;
+            border-radius: var(--radius);
+            font-size: 15px;
+            color: var(--text);
+            outline: none;
+        }
+
+        .input-box i {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: var(--sub);
+            font-size: 16px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 14px;
+            background: var(--orange);
+            border: none;
+            border-radius: var(--radius);
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #fff;
+            transition: 0.2s;
+        }
+
+        .submit-btn:hover {
+            background: var(--orange-dark);
+        }
+
+        .login-link {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--sub);
+        }
+
+        .login-link a {
+            color: var(--orange);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+
+</head>
+<body>
+
+    <div class="register-box">
+        <h2>Criar Conta</h2>
+
+        <button class="google-btn">
+            <i class="fab fa-google"></i> Continuar com Google
+        </button>
+
+        <div class="separator">ou registre-se com email</div>
+
+        <form>
+            <div class="input-box">
+                <i class="fa-solid fa-user"></i>
+                <input type="text" placeholder="Nome Completo" required>
+            </div>
+
+            <div class="input-box">
+                <i class="fa-solid fa-envelope"></i>
+                <input type="email" placeholder="Email" required>
+            </div>
+
+            <div class="input-box">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" placeholder="Senha" required>
+            </div>
+
+            <button type="submit" class="submit-btn">Registrar</button>
+        </form>
+
+        <p class="login-link">
+            Já tem conta? <a href="#">Entrar</a>
+        </p>
+    </div>
+
+</body>
+</html>

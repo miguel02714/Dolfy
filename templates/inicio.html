@@ -44,7 +44,7 @@
             top: 0; border-bottom-left-radius: var(--radius-lg); border-bottom-right-radius: var(--radius-lg);
             padding-top: 50px; padding-bottom: 20px; transform: translateY(0);
         }
-        .location-input-bar.hidden { transform: translateY(calc(-100% - 10px)); }
+        .location-input-bar.hidden { transform: translateY(calc(-100% - 10px)); opacity: 0; pointer-events: none; }
         .bottom-panel {
             bottom: 0; border-top-left-radius: var(--radius-lg); border-top-right-radius: var(--radius-lg);
             padding-bottom: 35px; transform: translateY(0);
@@ -136,11 +136,41 @@
         .alert-btn { bottom: 120px; background: var(--yellow); color: var(--bg-dark); }
         .sos-btn { bottom: 60px; background: var(--red); }
         .nav-end-btn { 
-            bottom: 20px; left: 50%; transform: translateX(-50%); 
-            width: 200px; height: 50px; border-radius: var(--radius-md); 
-            background: var(--red); color: var(--text-light); z-index: 30;
-            display: none;
+            bottom: 60px; right: 16px; 
+            width: 50px; height: 50px; border-radius: 50%;
+            background: var(--bg-dark); color: var(--red); font-size: 24px;
+            border: 2px solid var(--red); z-index: 30;
+            display: none; padding: 0;
+            box-shadow: 0 5px 15px rgba(229, 57, 53, 0.4);
         }
+        .nav-end-btn:hover { background: #2a2a2a; border-color: var(--red); }
+        
+        .profile-btn {
+            position: absolute; top: 16px; left: 16px; 
+            width: 50px; height: 50px; border-radius: 50%; border: none;
+            background: var(--surface-dark); color: var(--text-light); font-size: 22px; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.6); z-index: 21;
+        }
+        .profile-btn i { color: var(--orange); }
+
+        /* Estilos do Painel de Navegação/Velocímetro */
+        #navigationControls {
+            position: absolute; top: 16px; left: 80px;
+            z-index: 20; display: none; /* Inicia oculto */
+        }
+        #speedometer {
+            background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur));
+            border-radius: var(--radius-lg); padding: 10px 15px;
+            border: 1px solid var(--glass-border); box-shadow: var(--shadow-float);
+            width: 150px; text-align: center;
+        }
+        #currentSpeed { font-size: 36px; font-weight: 800; color: var(--orange); line-height: 1; }
+        #speedUnit { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+        #speedLimit { margin-top: 5px; font-size: 13px; font-weight: 600; color: var(--text-light); }
+        .overspeed #currentSpeed { color: var(--red); }
+        .overspeed #speedUnit { color: var(--red); }
+        .overspeed #speedLimit { color: var(--red); font-weight: 700; }
+
 
         /* Autocompletar Estilos */
         .autocomplete-container { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface-dark); border-radius: var(--radius-md); box-shadow: var(--shadow-float); z-index: 100; margin-top: 5px; max-height: 200px; overflow-y: auto;}
@@ -168,6 +198,19 @@
 </head>
 <body>
 <div id="map"></div>
+
+<button class="profile-btn" id="profileBtn" title="Meu Perfil">
+    <i class="fa-solid fa-user-circle"></i>
+</button>
+
+<div id="navigationControls">
+    <div id="speedometer">
+        <div id="currentSpeed">--</div>
+        <div id="speedUnit">KM/H</div>
+        <div id="speedLimit">Limite: -- km/h</div>
+    </div>
+</div>
+
 <div class="floating-panel location-input-bar" id="locationInputBar">
     <div class="location-fields-container">
         <div class="location-field">
@@ -239,8 +282,8 @@
     <i class="fa-solid fa-bell"></i>
 </button>
 
-<button class="action-btn nav-end-btn" id="endNavigationBtn" title="Encerrar a navegação">
-    <i class="fa-solid fa-square-xmark"></i> ENCERRAR
+<button class="floating-action-btn nav-end-btn" id="endNavigationBtn" title="Encerrar a navegação">
+    <i class="fa-solid fa-square-xmark"></i>
 </button>
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js"></script>
@@ -252,18 +295,21 @@
     mapboxgl.accessToken = MAPBOX_TOKEN; 
     const mapboxClient = mapboxSdk({ accessToken: MAPBOX_TOKEN });
 
-    let userCoords = null; let riskMarkers = []; let currentProfile = "mapbox/driving"; let isSearching = false;
+    let userCoords = null; let userSpeed = 0; let speedLimit = 60; // Simulação de limite
+    let riskMarkers = []; let currentProfile = "mapbox/driving"; let isSearching = false;
     let isNavigating = false;
     let geocodingTimeout;
 
     const [originInput, destinationInput, switchBtn, mainBottomPanel, locationInputBar, 
-           locationSelectionPanel, routePanel, reportPanel, reportCloseBtn, startBtn, 
-           modeButtons, riskAlert, centerBtn, alertBtn, sosBtn, endNavigationBtn, 
-           routeDistanceEl, routeTimeEl, routeRiskChip, goBtnDummy, autocompleteContainer] = 
+          locationSelectionPanel, routePanel, reportPanel, reportCloseBtn, startBtn, 
+          modeButtons, riskAlert, centerBtn, alertBtn, sosBtn, endNavigationBtn, 
+          routeDistanceEl, routeTimeEl, routeRiskChip, goBtnDummy, autocompleteContainer,
+          speedometer, currentSpeedEl, speedLimitEl, navigationControls, profileBtn] = 
     ["originInput", "destinationInput", "switchBtn", "mainBottomPanel", "locationInputBar", 
      "locationSelectionPanel", "routePanel", "reportPanel", "reportCloseBtn", "startBtn", 
      ".mode-btn", "riskAlert", "centerBtn", "alertBtn", "sosBtn", "endNavigationBtn", 
-     "routeDistance", "routeTime", "routeRiskChip", "goBtnDummy", "autocompleteContainer"]
+     "routeDistance", "routeTime", "routeRiskChip", "goBtnDummy", "autocompleteContainer",
+     "speedometer", "currentSpeed", "speedLimit", "navigationControls", "profileBtn"]
     .map(id => document.getElementById(id) || document.querySelectorAll(id));
 
     const map = new mapboxgl.Map({
@@ -291,7 +337,35 @@
         userCoords = [e.coords.longitude, e.coords.latitude];
         originInput.setAttribute('data-lat', e.coords.latitude);
         originInput.setAttribute('data-lng', e.coords.longitude);
+        
+        // **NOVO: Atualiza a velocidade**
+        // A velocidade é dada em metros por segundo (m/s) e convertida para km/h
+        const newSpeed = e.coords.speed !== null && e.coords.speed >= 0 
+            ? Math.round(e.coords.speed * 3.6) : 0;
+        userSpeed = newSpeed;
+        
+        // Simula o limite de velocidade (poderia ser baseado em dados de mapa)
+        // Se a velocidade for muito baixa, o limite não é relevante
+        speedLimit = newSpeed < 10 ? 60 : (newSpeed < 40 ? 40 : 80); 
+        
+        if (isNavigating) {
+            updateSpeedometer();
+        }
     });
+    
+    // **NOVO: Função para atualizar o Velocímetro**
+    function updateSpeedometer() {
+        if (currentSpeedEl && speedLimitEl && speedometer) {
+            currentSpeedEl.textContent = userSpeed;
+            speedLimitEl.textContent = `Limite: ${speedLimit} km/h`;
+            
+            if (userSpeed > speedLimit) {
+                speedometer.classList.add('overspeed');
+            } else {
+                speedometer.classList.remove('overspeed');
+            }
+        }
+    }
 
     async function geocodeAddress(query) {
         if (query === "Minha Localização") return userCoords ? { lng: userCoords[0], lat: userCoords[1], name: "Minha Localização" } : null;
@@ -414,6 +488,8 @@
     function startNavigation() {
         isNavigating = true;
         hideUIElements(true);
+        updateSpeedometer(); // Atualiza o velocímetro na inicialização
+        navigationControls.style.display = 'block'; // Mostra o velocímetro
         map.flyTo({ 
             center: [originInput.getAttribute('data-lng'), originInput.getAttribute('data-lat')], 
             zoom: 16, essential: true, speed: 0.8 
@@ -426,19 +502,26 @@
         isNavigating = false;
         hideUIElements(false);
         showPanel('locationSelection');
+        navigationControls.style.display = 'none'; // Esconde o velocímetro
         map.dragPan.enable(); map.doubleClickZoom.enable(); 
         map.touchZoomRotate.enable(); 
         directions.setOrigin(""); directions.setDestination("");
     }
 
     function hideUIElements(hide) {
+        // Esconde a barra de endereço completamente durante a navegação
         locationInputBar.classList.toggle("hidden", hide);
         mainBottomPanel.classList.toggle("hidden", hide);
         riskAlert.style.display = 'none';
-        centerBtn.style.display = hide ? 'block' : 'block';
-        alertBtn.style.display = hide ? 'block' : 'block';
-        sosBtn.style.display = hide ? 'block' : 'block';
+        
+        // Mantém Center/Alert/SOS, mas ajusta a visibilidade do End Navigation
+        centerBtn.style.display = 'block';
+        alertBtn.style.display = hide ? 'block' : 'none'; 
+        sosBtn.style.display = hide ? 'block' : 'none'; 
         endNavigationBtn.style.display = hide ? 'flex' : 'none';
+        
+
+        profileBtn.style.display = hide ? 'none' : 'block';
     }
 
 
@@ -540,6 +623,11 @@
         destinationInput.setAttribute('data-lng', origLng);
         
         requestRoute();
+    });
+    
+    // **NOVO: Listener para o Botão de Perfil**
+    profileBtn.addEventListener("click", () => {
+        alert("Página de Perfil (Simulação) - Implemente aqui a navegação real.");
     });
 
     document.querySelectorAll(".report-btn").forEach(btn => btn.addEventListener("click", (e) => {
