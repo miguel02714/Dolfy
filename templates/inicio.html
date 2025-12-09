@@ -199,9 +199,7 @@
 <body>
 <div id="map"></div>
 
-<button class="profile-btn" id="profileBtn" title="Meu Perfil">
-    <i class="fa-solid fa-user-circle"></i>
-</button>
+
 
 <div id="navigationControls">
     <div id="speedometer">
@@ -281,9 +279,14 @@
 <button class="floating-action-btn sos-btn" id="sosBtn" title="Botão de Emergência SOS">
     <i class="fa-solid fa-bell"></i>
 </button>
-
+<style>
+    .testecagado{
+        background-color: rgb(12, 12, 12);
+        font-family: Arial, Helvetica, sans-serif;
+    }
+</style>
 <button class="floating-action-btn nav-end-btn" id="endNavigationBtn" title="Encerrar a navegação">
-    <i class="fa-solid fa-square-xmark"></i>
+    <i class="testecagado" class="fa-solid fa-square-xmark">X</i>
 </button>
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js"></script>
@@ -488,7 +491,7 @@
     function startNavigation() {
         isNavigating = true;
         hideUIElements(true);
-        updateSpeedometer(); // Atualiza o velocímetro na inicialização
+        updateSpeedometer(); 
         navigationControls.style.display = 'block'; // Mostra o velocímetro
         map.flyTo({ 
             center: [originInput.getAttribute('data-lng'), originInput.getAttribute('data-lat')], 
@@ -502,19 +505,18 @@
         isNavigating = false;
         hideUIElements(false);
         showPanel('locationSelection');
-        navigationControls.style.display = 'none'; // Esconde o velocímetro
+        navigationControls.style.display = 
         map.dragPan.enable(); map.doubleClickZoom.enable(); 
         map.touchZoomRotate.enable(); 
         directions.setOrigin(""); directions.setDestination("");
     }
 
     function hideUIElements(hide) {
-        // Esconde a barra de endereço completamente durante a navegação
         locationInputBar.classList.toggle("hidden", hide);
         mainBottomPanel.classList.toggle("hidden", hide);
         riskAlert.style.display = 'none';
         
-        // Mantém Center/Alert/SOS, mas ajusta a visibilidade do End Navigation
+       
         centerBtn.style.display = 'block';
         alertBtn.style.display = hide ? 'block' : 'none'; 
         sosBtn.style.display = hide ? 'block' : 'none'; 
@@ -605,7 +607,7 @@
     });
     alertBtn.addEventListener("click", () => {
         if (userCoords && !isNavigating) showPanel('report');
-        else if (userCoords && isNavigating) alert('Seu relatório será enviado em tempo real.'); // Simulação de envio durante navegação
+        else if (userCoords && isNavigating) alert('Seu relatório será enviado em tempo real.'); 
         else alert("Aguardando sua localização GPS.");
     });
     reportCloseBtn.addEventListener("click", () => showPanel('route'));
@@ -614,7 +616,6 @@
         const [origVal, destVal] = [originInput.value, destinationInput.value];
         const [origLat, destLat] = [originInput.getAttribute('data-lat'), destinationInput.getAttribute('data-lat')];
         const [origLng, destLng] = [originInput.getAttribute('data-lng'), destinationInput.getAttribute('data-lng')];
-
         originInput.value = destVal;
         destinationInput.value = origVal;
         originInput.setAttribute('data-lat', destLat);
@@ -624,12 +625,9 @@
         
         requestRoute();
     });
-    
-    // **NOVO: Listener para o Botão de Perfil**
     profileBtn.addEventListener("click", () => {
         alert("Página de Perfil (Simulação) - Implemente aqui a navegação real.");
     });
-
     document.querySelectorAll(".report-btn").forEach(btn => btn.addEventListener("click", (e) => {
         const category = e.currentTarget.getAttribute('data-category');
         alert(`Incidente de ${category.replace('-', ' ')} reportado com sucesso!`);
