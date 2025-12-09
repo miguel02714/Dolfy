@@ -4,380 +4,180 @@
     <meta charset="utf-8">
     <title>WeSafe — Navegação Segura (Refatorado)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
-
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.css" rel="stylesheet">
     <link href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.1/mapbox-gl-directions.css" rel="stylesheet">
-
     <style>
         :root {
-            --orange: #ff751f;
-            --orange-dark: #cc5e18;
-            --red: #e53935;
-            --green: #4caf50;
-            --yellow: #ffb300;
-            
-            /* DARK MODE VARS */
-            --bg-dark: #121212;
-            --surface-dark: #1f1f1f;
-            --text-light: #e0e0e0;
-            --text-secondary: #aaaaaa;
-            --border-dark: #333;
-            
-            /* GLASSMORHISM VARS */
-            --glass-bg: rgba(31, 31, 31, 0.95);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --glass-blur: 15px;
-            --shadow-float: 0 8px 30px rgba(0,0,0,0.8);
-            --shadow-soft: 0 4px 10px rgba(0,0,0,0.5);
-
-            --radius-lg: 20px;
-            --radius-md: 14px;
+            --orange: #ff751f; --orange-dark: #cc5e18; --red: #e53935; --green: #4caf50; --yellow: #ffb300;
+            --bg-dark: #121212; --surface-dark: #1f1f1f; --text-light: #e0e0e0; --text-secondary: #aaaaaa;
+            --border-dark: #333; --glass-bg: rgba(31, 31, 31, 0.95); --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-blur: 15px; --shadow-float: 0 8px 30px rgba(0,0,0,0.8);
+            --radius-lg: 20px; --radius-md: 14px;
         }
-
         * { 
             box-sizing: border-box; 
             transition: color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease, opacity 0.3s ease;
         }
-
         body {
-            margin: 0; padding: 0; overflow: hidden;
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-dark);
-            color: var(--text-light);
+            margin: 0; padding: 0; overflow: hidden; font-family: 'Inter', sans-serif;
+            background: var(--bg-dark); color: var(--text-light);
         }
-
-        #map {
-            width: 100vw; height: 100vh;
-            position: absolute; top: 0; left: 0;
-        }
-
-        /* Esconde o Directions default do Mapbox */
-        .mapboxgl-ctrl-directions { display: none !important; } 
-        .mapboxgl-ctrl-geocoder { display: none !important; }
-
-        /* Estilos da Linha de Rota (Garante Laranja) */
-        .mapboxgl-ctrl-directions-route-0,
-        .mapbox-gl-draw-line.mapbox-gl-draw-line-static {
-            stroke: var(--orange) !important;
-            stroke-color: var(--orange) !important;
-            stroke-width: 6 !important;
+        #map { width: 100vw; height: 100vh; position: absolute; top: 0; left: 0; }
+        .mapboxgl-ctrl-directions, .mapboxgl-ctrl-geocoder { display: none !important; } 
+        .mapboxgl-ctrl-directions-route-0, .mapbox-gl-draw-line.mapbox-gl-draw-line-static {
+            stroke: var(--orange) !important; stroke-color: var(--orange) !important; stroke-width: 6 !important;
         }
         #directions-route-main { line-color: var(--orange) !important; line-width: 6 !important; }
         #directions-route-alt { line-color: var(--orange) !important; line-opacity: 0.4 !important; }
 
-
-        /* ======= CONTAINERS FLUTUANTES (MOBILE-FIRST) ======= */
         .floating-panel {
-            position: absolute; left: 0; right: 0;
-            width: 100%;
-            max-width: 550px;
-            margin: 0 auto;
-            
-            /* EFEITO GLASSMORPHISM */
-            background: var(--glass-bg);
-            backdrop-filter: blur(var(--glass-blur));
-            -webkit-backdrop-filter: blur(var(--glass-blur));
-            box-shadow: var(--shadow-float);
-            padding: 16px;
-            z-index: 20;
-            border: 1px solid var(--glass-border);
+            position: absolute; left: 0; right: 0; width: 100%; max-width: 550px; margin: 0 auto;
+            background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
+            box-shadow: var(--shadow-float); padding: 16px; z-index: 20; border: 1px solid var(--glass-border);
             transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-
-        /* Painel TOP: Input de Localização */
         .location-input-bar {
-            top: 0;
-            border-bottom-left-radius: var(--radius-lg);
-            border-bottom-right-radius: var(--radius-lg);
-            padding-top: 50px;
-            padding-bottom: 20px;
-            transform: translateY(0);
+            top: 0; border-bottom-left-radius: var(--radius-lg); border-bottom-right-radius: var(--radius-lg);
+            padding-top: 50px; padding-bottom: 20px; transform: translateY(0);
         }
-        .location-input-bar.hidden {
-            transform: translateY(calc(-100% - 10px));
-        }
-        
-        /* Painéis BOTTOM */
+        .location-input-bar.hidden { transform: translateY(calc(-100% - 10px)); }
         .bottom-panel {
-            bottom: 0;
-            border-top-left-radius: var(--radius-lg);
-            border-top-right-radius: var(--radius-lg);
-            padding-bottom: 35px;
-            transform: translateY(0);
+            bottom: 0; border-top-left-radius: var(--radius-lg); border-top-right-radius: var(--radius-lg);
+            padding-bottom: 35px; transform: translateY(0);
         }
-        .bottom-panel.hidden {
-            opacity: 0;
-            transform: translateY(100%);
-            pointer-events: none;
-        }
-        .route-panel, .location-selection-panel, .report-panel {
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        }
-        .hidden-panel {
-            display: none;
-            opacity: 0;
-            pointer-events: none;
-        }
+        .bottom-panel.hidden { opacity: 0; transform: translateY(100%); pointer-events: none; }
+        .panel-content > div { opacity: 1; transition: opacity 0.3s ease; }
+        .hidden-panel { display: none !important; opacity: 0; pointer-events: none; }
 
-
-        /* Campos de Localização */
-        .location-fields-container {
-            display: flex; flex-direction: column; gap: 10px;
-        }
-        .location-field {
-            display: flex; align-items: center; gap: 12px;
-        }
-        
+        .location-fields-container { display: flex; flex-direction: column; gap: 10px; }
+        .location-field { display: flex; align-items: center; gap: 12px; position: relative;}
         .location-field input {
-            flex: 1; border: none; outline: none;
-            background: var(--surface-dark); 
-            color: var(--text-light);
-            font-size: 16px; font-weight: 600;
-            padding: 12px; 
-            border-radius: var(--radius-md);
-            border: 2px solid transparent; 
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
-            transition: all 0.2s;
+            flex: 1; border: none; outline: none; background: var(--surface-dark); color: var(--text-light);
+            font-size: 16px; font-weight: 600; padding: 12px; border-radius: var(--radius-md);
+            border: 2px solid transparent; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
         }
-        
         .location-field input:focus {
-            border-color: var(--orange);
-            background: #2a2a2a; 
+            border-color: var(--orange); background: #2a2a2a; 
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.4), 0 0 0 3px rgba(255, 117, 31, 0.4);
         }
-        
-        .location-field i {
-            font-size: 18px;
-            width: 20px; 
-            text-align: center;
-        }
-        
+        .location-field i { font-size: 18px; width: 20px; text-align: center; }
         .location-field:first-child .fa-location-dot { color: var(--green); }
         .location-field:nth-child(2) .fa-location-dot { color: var(--red); }
-
-        /* Botão de Trocar (Switch) */
-        .switch-button-container {
-            display: flex;
-            justify-content: flex-end; 
-            padding: 5px 0 0;
-        }
+        .switch-button-container { display: flex; justify-content: flex-end; padding: 5px 0 0; }
         .switch-button-container button {
-            background: var(--surface-dark); 
-            border: 1px solid var(--border-dark);
-            color: var(--text-secondary);
-            font-size: 18px;
-            cursor: pointer;
-            width: 35px; height: 35px;
-            border-radius: 50%;
-            padding: 0;
+            background: var(--surface-dark); border: 1px solid var(--border-dark); color: var(--text-secondary);
+            font-size: 18px; cursor: pointer; width: 35px; height: 35px; border-radius: 50%; padding: 0;
             box-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
         .switch-button-container button:hover { transform: rotate(180deg); color: var(--orange); }
-        .switch-button-container button:active { transform: rotate(180deg) scale(0.9); }
         
-        /* Painel de Rotas (route-panel) */
         .route-summary-section {
             display: flex; justify-content: space-between; align-items: center; gap: 10px;
-            padding-bottom: 15px; margin-bottom: 15px;
-            border-bottom: 1px solid var(--border-dark);
+            padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid var(--border-dark);
         }
-        
         .route-distance { font-weight: 800; font-size: 26px; color: var(--text-light); }
         .route-time { font-size: 14px; color: var(--text-secondary); font-weight: 600; }
-        
-        /* Chip de Risco */
         .route-risk-chip { 
             font-size: 13px; font-weight: 800; padding: 8px 16px; border-radius: 999px; 
             text-transform: uppercase; box-shadow: 0 2px 5px rgba(0,0,0,0.4);
         }
-        .route-risk-chip.chip-low { background: var(--green); color: var(--bg-dark); }
-        .route-risk-chip.chip-mod { background: var(--yellow); color: var(--bg-dark); }
-        .route-risk-chip.chip-high { background: var(--red); color: var(--text-light); }
-        .route-risk-chip.chip-na { background: var(--surface-dark); color: var(--text-secondary); }
+        .chip-low { background: var(--green); color: var(--bg-dark); }
+        .chip-mod { background: var(--yellow); color: var(--bg-dark); }
+        .chip-high { background: var(--red); color: var(--text-light); }
+        .chip-na { background: var(--surface-dark); color: var(--text-secondary); }
 
-        /* Seleção de Modo (Mode Buttons) */
-        .route-mode {
-            display: flex; justify-content: space-between; gap: 8px;
-            margin-bottom: 15px;
-        }
+        .route-mode { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 15px; }
         .mode-btn {
-            flex: 1; border: none; border-radius: var(--radius-md);
-            background: var(--surface-dark); 
-            color: var(--text-secondary); font-weight: 600; font-size: 13px; 
-            padding: 10px 5px; 
-            cursor: pointer;
-            display: flex; flex-direction: column; align-items: center; gap: 4px;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+            flex: 1; border: none; border-radius: var(--radius-md); background: var(--surface-dark); 
+            color: var(--text-secondary); font-weight: 600; font-size: 13px; padding: 10px 5px; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: 0 3px 8px rgba(0,0,0,0.4);
         }
         .mode-btn i { font-size: 18px; }
-
-        /* Botão de Modo Ativo */
-        .mode-btn.active {
-            background: var(--orange); 
-            color: var(--bg-dark); 
-            box-shadow: 0 5px 15px rgba(255, 117, 31, 0.5);
-        }
-        .mode-btn:not(.active):hover { background: #2a2a2a; }
-
-        /* Botão START (Principal) */
+        .mode-btn.active { background: var(--orange); color: var(--bg-dark); box-shadow: 0 5px 15px rgba(255, 117, 31, 0.5); }
         .action-btn {
-            width: 100%; border: none; border-radius: var(--radius-md);
-            background: var(--orange); 
-            color: var(--bg-dark); font-weight: 800; font-size: 18px; 
-            padding: 16px; 
-            cursor: pointer;
-            box-shadow: 0 8px 20px rgba(255, 117, 31, 0.4);
-            text-transform: uppercase;
+            width: 100%; border: none; border-radius: var(--radius-md); background: var(--orange); 
+            color: var(--bg-dark); font-weight: 800; font-size: 18px; padding: 16px; cursor: pointer;
+            box-shadow: 0 8px 20px rgba(255, 117, 31, 0.4); text-transform: uppercase;
         }
-        .action-btn:hover { background: var(--orange-dark); box-shadow: 0 10px 25px rgba(255, 117, 31, 0.6); transform: translateY(-1px); }
-        .action-btn:active { transform: scale(0.98); box-shadow: 0 5px 15px rgba(255, 117, 31, 0.3); }
+        .action-btn:hover { background: var(--orange-dark); transform: translateY(-1px); }
+        .action-btn:active { transform: scale(0.98); }
         .action-btn i { margin-right: 8px; }
         .action-btn.loading { pointer-events: none; opacity: 0.7; }
-
-        /* Loading spinner */
         .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top: 3px solid var(--bg-dark);
-            width: 18px; height: 18px;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
+            border: 3px solid rgba(255, 255, 255, 0.3); border-top: 3px solid var(--bg-dark);
+            width: 18px; height: 18px; border-radius: 50%; animation: spin 1s linear infinite;
             display: inline-block; margin-right: 6px;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Alerta de Risco (Risk Alert) - Centralizado e Moderno */
         .risk-alert {
-            position: absolute; top: 180px; left: 50%; 
-            transform: translateX(-50%);
-            width: calc(100% - 32px);
-            max-width: 500px;
-            padding: 10px 15px;
-            border-radius: var(--radius-md);
-            font-weight: 600; font-size: 15px; text-align: center;
-            display: none; z-index: 20;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.6);
-            border: 1px solid transparent;
+            position: absolute; top: 180px; left: 50%; transform: translateX(-50%);
+            width: calc(100% - 32px); max-width: 500px; padding: 10px 15px;
+            border-radius: var(--radius-md); font-weight: 600; font-size: 15px; text-align: center;
+            display: none; z-index: 20; box-shadow: 0 5px 15px rgba(0,0,0,0.6); border: 1px solid transparent;
         }
-
         .risk-alert.low { background: rgba(76, 175, 80, 0.95); border-color: var(--green); color: var(--bg-dark); }
         .risk-alert.moderate { background: rgba(255, 179, 0, 0.95); border-color: var(--yellow); color: var(--bg-dark); }
         .risk-alert.high { background: rgba(229, 57, 53, 0.95); border-color: var(--red); color: var(--text-light); }
-        .risk-alert i { margin-right: 6px; }
-        .risk-alert span { font-weight: 800; }
 
-        /* Botões Flutuantes (Ações laterais) */
         .floating-action-btn {
-            position: absolute; right: 16px;
-            width: 50px; height: 50px; 
-            border-radius: 50%;
-            border: none;
-            color: var(--text-light);
-            font-size: 20px; 
-            cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.6);
-            z-index: 10;
+            position: absolute; right: 16px; width: 50px; height: 50px; border-radius: 50%; border: none;
+            color: var(--text-light); font-size: 20px; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.6); z-index: 10;
         }
-        
         .center-btn { 
-            top: 220px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--glass-border);
-            color: var(--orange); 
+            top: 220px; background: var(--glass-bg); backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border); color: var(--orange); 
         }
-        .center-btn:hover { background: rgba(31, 31, 31, 0.8); }
-        .alert-btn { 
-            bottom: 120px;
-            background: var(--yellow); 
-            color: var(--bg-dark);
-        }
-        .sos-btn { 
-            bottom: 60px;
-            background: var(--red);
-        }
-        .floating-action-btn:hover { transform: scale(1.05); }
-        .floating-action-btn:active { transform: scale(0.95); }
-
-        /* Painel de Relato de Incidente */
-        .report-panel h3 {
-            margin-top: 0;
-            color: var(--orange);
-            font-weight: 800;
-            border-bottom: 2px solid var(--border-dark);
-            padding-bottom: 10px;
-            margin-bottom: 15px;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .report-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px;
-        }
-        .report-btn {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 15px 5px;
-            border-radius: var(--radius-md);
-            background: var(--surface-dark);
-            color: var(--text-light);
-            font-size: 13px; font-weight: 600;
-            cursor: pointer;
-            border: 2px solid transparent;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
-        }
-        .report-btn:hover {
-            border-color: var(--orange);
-            background: #2a2a2a;
-        }
-        .report-btn i {
-            font-size: 24px;
-            margin-bottom: 5px;
-            color: var(--yellow);
-        }
-        .report-btn[data-category="assalto"] i,
-        .report-btn[data-category="policia"] i {
-             color: var(--red);
-        }
-        .report-btn[data-category="obra"] i,
-        .report-btn[data-category="pista"] i {
-             color: var(--orange);
+        .alert-btn { bottom: 120px; background: var(--yellow); color: var(--bg-dark); }
+        .sos-btn { bottom: 60px; background: var(--red); }
+        .nav-end-btn { 
+            bottom: 20px; left: 50%; transform: translateX(-50%); 
+            width: 200px; height: 50px; border-radius: var(--radius-md); 
+            background: var(--red); color: var(--text-light); z-index: 30;
+            display: none;
         }
 
-        .report-close-btn {
-            margin-top: 15px;
-            background: var(--border-dark);
-            color: var(--text-secondary);
-            font-weight: 600;
+        /* Autocompletar Estilos */
+        .autocomplete-container { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface-dark); border-radius: var(--radius-md); box-shadow: var(--shadow-float); z-index: 100; margin-top: 5px; max-height: 200px; overflow-y: auto;}
+        .autocomplete-item { padding: 10px 15px; cursor: pointer; border-bottom: 1px solid var(--border-dark); font-size: 14px; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover { background: #2a2a2a; }
+        .autocomplete-item .main-text { font-weight: 700; color: var(--orange); }
+
+        /* Report Panel Styles */
+        .report-panel h3 { margin-top: 0; color: var(--orange); font-weight: 800; border-bottom: 2px solid var(--border-dark); padding-bottom: 10px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+        .report-btn { 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px 5px;
+            border-radius: var(--radius-md); background: var(--surface-dark); color: var(--text-light); 
+            font-size: 13px; font-weight: 600; cursor: pointer; border: 2px solid transparent; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
         }
-        .report-close-btn:hover {
-            background: #444;
-            color: var(--text-light);
-        }
+        .report-btn:hover { border-color: var(--orange); background: #2a2a2a; }
+        .report-btn i { font-size: 24px; margin-bottom: 5px; color: var(--yellow); }
+        .report-btn[data-category="assalto"] i, .report-btn[data-category="policia"] i { color: var(--red); }
+        .report-btn[data-category="obra"] i, .report-btn[data-category="pista"] i { color: var(--orange); }
+        .report-close-btn { margin-top: 15px; background: var(--border-dark); color: var(--text-secondary); font-weight: 600; }
+        .report-close-btn:hover { background: #444; color: var(--text-light); }
         
     </style>
 </head>
-
 <body>
-
 <div id="map"></div>
-
 <div class="floating-panel location-input-bar" id="locationInputBar">
     <div class="location-fields-container">
         <div class="location-field">
             <i class="fa-solid fa-location-dot"></i>
-            <input id="originInput" type="text" placeholder="Sua localização (Partida)" data-lat="" data-lng="">
+            <input id="originInput" type="text" placeholder="Sua localização (Partida)" value="Minha Localização" data-lat="" data-lng="">
         </div>
-        <div class="location-field">
+        <div class="location-field" style="position: relative;">
             <i class="fa-solid fa-location-dot"></i>
             <input id="destinationInput" type="text" placeholder="Para onde você quer ir? (Destino)" data-lat="" data-lng="">
+            <div id="autocompleteContainer" class="autocomplete-container hidden-panel"></div>
         </div>
     </div>
     <div class="switch-button-container">
@@ -386,67 +186,46 @@
         </button>
     </div>
 </div>
-
 <div class="risk-alert" id="riskAlert"></div>
-
 <div class="floating-panel bottom-panel" id="mainBottomPanel">
-    
-    <div class="location-selection-panel hidden-panel" id="locationSelectionPanel">
-        <button class="action-btn" disabled>
-            <i class="fa-solid fa-route"></i> Digite um Destino
-        </button>
-    </div>
-    
-    <div class="route-panel hidden-panel" id="routePanel">
-        <div class="route-summary-section">
-            <div class="route-main-info">
-                <span class="route-distance" id="routeDistance">-- km</span>
-                <span class="route-time" id="routeTime">-- min</span>
+    <div class="panel-content">
+        <div class="location-selection-panel" id="locationSelectionPanel">
+            <button class="action-btn" id="goBtnDummy" disabled>
+                <i class="fa-solid fa-route"></i> Digite um Destino
+            </button>
+        </div>
+        
+        <div class="route-panel hidden-panel" id="routePanel">
+            <div class="route-summary-section">
+                <div class="route-main-info">
+                    <span class="route-distance" id="routeDistance">-- km</span>
+                    <span class="route-time" id="routeTime">-- min</span>
+                </div>
+                <div class="route-risk-chip chip-na" id="routeRiskChip">RISCO N/A</div>
             </div>
-            <div class="route-risk-chip chip-na" id="routeRiskChip">RISCO N/A</div>
-        </div>
 
-        <div class="route-mode">
-            <button class="mode-btn active" data-profile="mapbox/driving">
-                <i class="fa-solid fa-car-side"></i> Carro
-            </button>
-            <button class="mode-btn" data-profile="mapbox/cycling">
-                <i class="fa-solid fa-bicycle"></i> Bike
-            </button>
-            <button class="mode-btn" data-profile="mapbox/walking">
-                <i class="fa-solid fa-person-walking"></i> A pé
+            <div class="route-mode">
+                <button class="mode-btn active" data-profile="mapbox/driving"><i class="fa-solid fa-car-side"></i> Carro</button>
+                <button class="mode-btn" data-profile="mapbox/cycling"><i class="fa-solid fa-bicycle"></i> Bike</button>
+                <button class="mode-btn" data-profile="mapbox/walking"><i class="fa-solid fa-person-walking"></i> A pé</button>
+            </div>
+            <button class="action-btn" id="startBtn">
+                <i class="fa-solid fa-route"></i> INICIAR PERCURSO SEGURO
             </button>
         </div>
-        <button class="action-btn" id="startBtn">
-            <i class="fa-solid fa-route"></i> INICIAR PERCURSO SEGURO
-        </button>
-    </div>
-    
-    <div class="report-panel hidden-panel" id="reportPanel">
-        <h3><i class="fa-solid fa-map-location-dot"></i> Relatar Incidente em Minha Posição</h3>
-        <div class="report-grid">
-            <button class="report-btn" data-category="pista">
-                <i class="fa-solid fa-road-barrier"></i> Pista Danificada
-            </button>
-            <button class="report-btn" data-category="obra">
-                <i class="fa-solid fa-helmet-safety"></i> Obra na Via
-            </button>
-            <button class="report-btn" data-category="assalto">
-                <i class="fa-solid fa-mask"></i> Ponto de Risco (Assalto)
-            </button>
-            <button class="report-btn" data-category="rua-escura">
-                <i class="fa-solid fa-lightbulb"></i> Rua Escura/Sem Iluminação
-            </button>
-            <button class="report-btn" data-category="policia">
-                <i class="fa-solid fa-user-shield"></i> Fiscalização/Polícia
-            </button>
-            <button class="report-btn" data-category="radar">
-                <i class="fa-solid fa-camera-cctv"></i> Radar/Velocidade
-            </button>
+        
+        <div class="report-panel hidden-panel" id="reportPanel">
+            <h3><i class="fa-solid fa-map-location-dot"></i> Relatar Incidente</h3>
+            <div class="report-grid">
+                <button class="report-btn" data-category="pista"><i class="fa-solid fa-road-barrier"></i> Pista Danificada</button>
+                <button class="report-btn" data-category="obra"><i class="fa-solid fa-helmet-safety"></i> Obra na Via</button>
+                <button class="report-btn" data-category="assalto"><i class="fa-solid fa-mask"></i> Ponto de Risco</button>
+                <button class="report-btn" data-category="rua-escura"><i class="fa-solid fa-lightbulb"></i> Rua Escura</button>
+                <button class="report-btn" data-category="policia"><i class="fa-solid fa-user-shield"></i> Fiscalização</button>
+                <button class="report-btn" data-category="radar"><i class="fa-solid fa-camera-cctv"></i> Radar/Velocidade</button>
+            </div>
+            <button class="action-btn report-close-btn" id="reportCloseBtn"><i class="fa-solid fa-xmark"></i> CANCELAR</button>
         </div>
-        <button class="action-btn report-close-btn" id="reportCloseBtn">
-            <i class="fa-solid fa-xmark"></i> CANCELAR
-        </button>
     </div>
 </div>
 
@@ -456,9 +235,12 @@
 <button class="floating-action-btn alert-btn" id="alertBtn" title="Relatar incidente em tempo real">
     <i class="fa-solid fa-triangle-exclamation"></i>
 </button>
-
 <button class="floating-action-btn sos-btn" id="sosBtn" title="Botão de Emergência SOS">
     <i class="fa-solid fa-bell"></i>
+</button>
+
+<button class="action-btn nav-end-btn" id="endNavigationBtn" title="Encerrar a navegação">
+    <i class="fa-solid fa-square-xmark"></i> ENCERRAR
 </button>
 
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.0/mapbox-gl.js"></script>
@@ -467,52 +249,32 @@
 
 <script>
     const MAPBOX_TOKEN = "pk.eyJ1IjoibWlndXdsMDI4NyIsImEiOiJjbWl3bTRsa3MyY3Y3M2Rwd3VtM3ZleGdrIn0.uTdjZpweZcDh9qfm89TyZw"; 
-    
     mapboxgl.accessToken = MAPBOX_TOKEN; 
     const mapboxClient = mapboxSdk({ accessToken: MAPBOX_TOKEN });
 
-    let userCoords = null; // [lng, lat]
-    let riskMarkers = [];
-    let currentProfile = "mapbox/driving";
-    let isSearching = false;
+    let userCoords = null; let riskMarkers = []; let currentProfile = "mapbox/driving"; let isSearching = false;
+    let isNavigating = false;
+    let geocodingTimeout;
 
-    // --- Elementos DOM ---
-    const locationInputBar = document.getElementById("locationInputBar");
-    const originInput = document.getElementById("originInput");
-    const destinationInput = document.getElementById("destinationInput");
-    const switchBtn = document.getElementById("switchBtn");
-    const mainBottomPanel = document.getElementById("mainBottomPanel");
-    const locationSelectionPanel = document.getElementById("locationSelectionPanel");
-    const routePanel = document.getElementById("routePanel");
-    const reportPanel = document.getElementById("reportPanel"); // NOVO
-    const reportCloseBtn = document.getElementById("reportCloseBtn"); // NOVO
-    const reportButtons = document.querySelectorAll(".report-btn"); // NOVO
-    const routeDistanceEl = document.getElementById("routeDistance");
-    const routeTimeEl = document.getElementById("routeTime");
-    const routeRiskChip = document.getElementById("routeRiskChip");
-    const startBtn = document.getElementById("startBtn");
-    const modeButtons = document.querySelectorAll(".mode-btn");
-    const riskAlert = document.getElementById("riskAlert");
-    const centerBtn = document.getElementById("centerBtn"); 
-    const alertBtn = document.getElementById("alertBtn");
-    const sosBtn = document.getElementById("sosBtn");
-    const goBtnDummy = locationSelectionPanel.querySelector('.action-btn'); 
+    const [originInput, destinationInput, switchBtn, mainBottomPanel, locationInputBar, 
+           locationSelectionPanel, routePanel, reportPanel, reportCloseBtn, startBtn, 
+           modeButtons, riskAlert, centerBtn, alertBtn, sosBtn, endNavigationBtn, 
+           routeDistanceEl, routeTimeEl, routeRiskChip, goBtnDummy, autocompleteContainer] = 
+    ["originInput", "destinationInput", "switchBtn", "mainBottomPanel", "locationInputBar", 
+     "locationSelectionPanel", "routePanel", "reportPanel", "reportCloseBtn", "startBtn", 
+     ".mode-btn", "riskAlert", "centerBtn", "alertBtn", "sosBtn", "endNavigationBtn", 
+     "routeDistance", "routeTime", "routeRiskChip", "goBtnDummy", "autocompleteContainer"]
+    .map(id => document.getElementById(id) || document.querySelectorAll(id));
 
-    // --- Inicialização do Mapa ---
     const map = new mapboxgl.Map({
         container: "map",
         style: "mapbox://styles/miguwl0287/cmixney1h001501s111340npb",
-        center: [-46.633, -23.550], // Centro em São Paulo
-        zoom: 12
+        center: [-46.633, -23.550], zoom: 12
     });
 
     const directions = new MapboxDirections({
-        accessToken: mapboxgl.accessToken,
-        unit: "metric",
-        profile: currentProfile,
-        controls: false,
-        alternatives: true,
-        styles: [
+        accessToken: mapboxgl.accessToken, unit: "metric", profile: currentProfile, controls: false, 
+        alternatives: true, styles: [
             { 'id': 'directions-route-main', 'type': 'line', 'source': 'directions', 'layout': { 'line-join': 'round', 'line-cap': 'round' }, 'paint': { 'line-color': 'var(--orange)', 'line-width': 6 }, 'filter': ['all', ['in', '$type', 'LineString'], ['in', 'route', 'main']] },
             { 'id': 'directions-route-alt', 'type': 'line', 'source': 'directions', 'layout': { 'line-join': 'round', 'line-cap': 'round' }, 'paint': { 'line-color': 'var(--orange)', 'line-width': 4, 'line-opacity': 0.4 }, 'filter': ['all', ['in', '$type', 'LineString'], ['in', 'route', 'alternate']] }
         ]
@@ -521,53 +283,37 @@
     map.addControl(directions, "top-left"); 
 
     const geo = new mapboxgl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: true,
-        showUserHeading: true
+        positionOptions: { enableHighAccuracy: true }, trackUserLocation: true, showUserHeading: true
     });
     map.addControl(geo);
 
-    // --- Funções de Lógica ---
+    geo.on('geolocate', (e) => {
+        userCoords = [e.coords.longitude, e.coords.latitude];
+        originInput.setAttribute('data-lat', e.coords.latitude);
+        originInput.setAttribute('data-lng', e.coords.longitude);
+    });
 
-    /** Converte endereço para coordenadas usando Mapbox Geocoding. */
     async function geocodeAddress(query) {
-        if (query === "Minha Localização") {
-            return userCoords ? { lng: userCoords[0], lat: userCoords[1], name: "Minha Localização" } : null;
-        }
-
+        if (query === "Minha Localização") return userCoords ? { lng: userCoords[0], lat: userCoords[1], name: "Minha Localização" } : null;
         try {
             const response = await mapboxClient.geocoding.forwardGeocode({
                 query: query, limit: 1, autocomplete: true, language: ['pt-BR']
             }).send();
-
             if (response?.body?.features?.length > 0) {
                 const feature = response.body.features[0];
-                return { 
-                    lng: feature.center[0], 
-                    lat: feature.center[1], 
-                    name: feature.place_name 
-                };
+                return { lng: feature.center[0], lat: feature.center[1], name: feature.place_name };
             }
-        } catch (error) {
-            console.error("Erro no geocoding:", error);
-        }
+        } catch (error) { console.error("Erro no geocoding:", error); }
         return null;
     }
     
-    /** Solicita o cálculo da rota ao Mapbox Directions. */
     async function requestRoute() {
-        if (isSearching) return;
-        
+        if (isSearching || isNavigating) return;
         const originText = originInput.value.trim();
         const destinationText = destinationInput.value.trim();
-        
-        if (originText === "" || destinationText === "") {
-            showInitialPanel(true);
-            return;
-        }
+        if (originText === "" || destinationText === "") { showPanel('locationSelection'); return; }
 
         isSearching = true;
-        
         routeRiskChip.textContent = "BUSCANDO ROTA...";
         routeRiskChip.className = "route-risk-chip chip-na";
         
@@ -576,355 +322,231 @@
             const destination = await geocodeAddress(destinationText);
 
             if (!origin || !destination) {
-                alert("Não foi possível encontrar um ou ambos os locais. Verifique os endereços.");
-                showPanel('locationSelection');
-                return;
+                alert("Não foi possível encontrar um ou ambos os locais.");
+                showPanel('locationSelection'); return;
             }
-            
-            // 1. Atualiza inputs e armazena coordenadas
-            if (originText !== "Minha Localização") { originInput.value = origin.name; }
-            originInput.setAttribute('data-lat', origin.lat);
-            originInput.setAttribute('data-lng', origin.lng);
+            if (originText !== "Minha Localização") originInput.value = origin.name;
+            originInput.setAttribute('data-lat', origin.lat); originInput.setAttribute('data-lng', origin.lng);
             destinationInput.value = destination.name;
-            destinationInput.setAttribute('data-lat', destination.lat);
-            destinationInput.setAttribute('data-lng', destination.lng);
+            destinationInput.setAttribute('data-lat', destination.lat); destinationInput.setAttribute('data-lng', destination.lng);
 
-            // 2. Define a rota (o evento 'route' do directions tratará o restante)
             directions.setOrigin([origin.lng, origin.lat]);
             directions.setDestination([destination.lng, destination.lat]);
             directions.setProfile(currentProfile); 
         } catch (error) {
             console.error("Erro ao solicitar a rota:", error);
-            
             showPanel('locationSelection');
         } finally {
             isSearching = false;
         }
     }
 
-    /** Atualiza o resumo da rota na UI. */
     function updateRouteInfo(route) {
         const distKm = route.distance / 1000;
         const durMin = route.duration / 60;
-
         routeDistanceEl.textContent = distKm.toFixed(1) + " km";
         routeTimeEl.textContent = Math.round(durMin) + " min • " + profileLabel(currentProfile);
-        
         showPanel('route');
-
-        riskAlert.style.display = "none";
         analyzeRouteRisk(route.legs[0].steps);
     }
 
-    /** SIMULAÇÃO DE ANÁLISE DE RISCO: Atualiza o chip e adiciona marcadores de risco. */
-    async function analyzeRouteRisk(steps) {
-        riskMarkers.forEach(m => m.remove());
-        riskMarkers = [];
-
+    function analyzeRouteRisk(steps) {
+        riskMarkers.forEach(m => m.remove()); riskMarkers = [];
         const riscoSimulado = Math.random() * 10;
-        const riskPoints = [];
-        
-        let chipClass = "";
-        let chipText = "";
-        let alertIcon = "";
-        let alertMsg = "";
+        let chipClass = ""; let chipText = ""; let alertIcon = ""; let alertMsg = "";
 
-        // 1. Define o Nível de Risco e Mensagem
         if (riscoSimulado < 4) {
-            alertMsg = 'Rota com **BAIXO risco** médio.';
-            chipClass = "chip-low";
-            chipText = "BAIXO RISCO";
-            alertIcon = '<i class="fa-solid fa-shield-halved"></i>';
+            alertMsg = 'Rota com **BAIXO risco** médio.'; chipClass = "chip-low"; chipText = "BAIXO RISCO"; alertIcon = '<i class="fa-solid fa-shield-halved"></i>';
         } else if (riscoSimulado < 7.5) {
-            alertMsg = 'Rota com risco **MODERADO**. Fique atento.';
-            chipClass = "chip-mod";
-            chipText = "RISCO MODERADO";
-            alertIcon = '<i class="fa-solid fa-triangle-exclamation"></i>';
-            
-            // Simula um ponto de risco moderado
+            alertMsg = 'Rota com risco **MODERADO**. Fique atento.'; chipClass = "chip-mod"; chipText = "RISCO MODERADO"; alertIcon = '<i class="fa-solid fa-triangle-exclamation"></i>';
             const randomStep = steps[Math.floor(Math.random() * steps.length)];
-            riskPoints.push({ 
-                lat: randomStep.maneuver.location[1], 
-                lng: randomStep.maneuver.location[0], 
-                risk_score: Math.min(7.4, 4 + Math.random() * 3.4) 
-            });
-            
+            addRiskMarker(randomStep.maneuver.location[1], randomStep.maneuver.location[0], Math.min(7.4, 4 + Math.random() * 3.4));
         } else {
-            alertMsg = 'Rota com **ALTO risco**. Evite se possível.';
-            chipClass = "chip-high";
-            chipText = "ALTO RISCO";
-            alertIcon = '<i class="fa-solid fa-skull-crossbones"></i>';
-            
-            // Simula 2 pontos de alto risco
+            alertMsg = 'Rota com **ALTO risco**. Evite se possível.'; chipClass = "chip-high"; chipText = "ALTO RISCO"; alertIcon = '<i class="fa-solid fa-skull-crossbones"></i>';
             for(let i = 0; i < 2; i++) {
                 const randomStep = steps[Math.floor(Math.random() * steps.length)];
-                riskPoints.push({ 
-                    lat: randomStep.maneuver.location[1] + (Math.random() - 0.5) * 0.005, 
-                    lng: randomStep.maneuver.location[0] + (Math.random() - 0.5) * 0.005, 
-                    risk_score: Math.min(10, 7.5 + Math.random() * 2.5) 
-                });
+                addRiskMarker(randomStep.maneuver.location[1] + (Math.random() - 0.5) * 0.005, randomStep.maneuver.location[0] + (Math.random() - 0.5) * 0.005, Math.min(10, 7.5 + Math.random() * 2.5));
             }
         }
-
-        // 2. Exibe o Alerta e Chip
-        riskAlert.style.display = "block";
         riskAlert.className = "risk-alert " + chipClass.replace('chip-', '');
         riskAlert.innerHTML = alertIcon + " " + alertMsg.replace(/\*\*/g, '<span>').replace(/span>/g, '</span>'); 
-        routeRiskChip.textContent = chipText;
-        routeRiskChip.className = "route-risk-chip " + chipClass;
-        
-        // 3. Adiciona Marcadores de Risco ao Mapa
-        riskPoints.forEach(p => {
-            const color = p.risk_score >= 7.5 ? "var(--red)" : p.risk_score >= 4 ? "var(--yellow)" : "var(--green)";
-            const el = document.createElement("div");
-            el.style.cssText = `width: 14px; height: 14px; border-radius: 50%; background: ${color}; box-shadow: 0 0 8px ${color}, inset 0 0 3px rgba(0,0,0,0.5); border: 1.5px solid var(--bg-dark); cursor: pointer;`; 
-            el.title = `Nível de Risco: ${p.risk_score.toFixed(1)}`; 
-
-            const marker = new mapboxgl.Marker(el).setLngLat([p.lng, p.lat]).addTo(map);
-            riskMarkers.push(marker);
-        });
+        routeRiskChip.textContent = chipText; routeRiskChip.className = "route-risk-chip " + chipClass;
     }
 
-    // --- Funções de UI (Display) ---
+    function addRiskMarker(lat, lng, score) {
+        const color = score >= 7.5 ? "var(--red)" : score >= 4 ? "var(--yellow)" : "var(--green)";
+        const el = document.createElement("div");
+        el.style.cssText = `width: 14px; height: 14px; border-radius: 50%; background: ${color}; box-shadow: 0 0 8px ${color}, inset 0 0 3px rgba(0,0,0,0.5); border: 1.5px solid var(--bg-dark); cursor: pointer;`; 
+        el.title = `Nível de Risco: ${score.toFixed(1)}`; 
+        riskMarkers.push(new mapboxgl.Marker(el).setLngLat([lng, lat]).addTo(map));
+    }
+
     function profileLabel(profile) {
         switch (profile) {
-            case "mapbox/driving": return "Carro";
-            case "mapbox/cycling": return "Bike";
-            case "mapbox/walking": return "A pé";
-            default: return "Rota";
+            case "mapbox/driving": return "Carro"; case "mapbox/cycling": return "Bike";
+            case "mapbox/walking": return "A pé"; default: return "Rota";
         }
     }
     
-    /** Mostra o painel correto no rodapé e ajusta a visibilidade dos outros. */
     function showPanel(panelName) {
-        // Oculta todos os painéis internos do rodapé
-        routePanel.classList.add("hidden-panel");
-        locationSelectionPanel.classList.add("hidden-panel");
-        reportPanel.classList.add("hidden-panel");
-
-        // Mostra o painel solicitado
+        [routePanel, locationSelectionPanel, reportPanel].forEach(p => p.classList.add("hidden-panel"));
         mainBottomPanel.classList.remove("hidden");
-        
+        riskAlert.style.display = panelName === 'route' ? "block" : "none";
+        locationInputBar.classList.remove("hidden");
+
         let panelToShow;
-        if (panelName === 'route') {
-            panelToShow = routePanel;
-            // Oculta o alerta de risco ao mostrar a tela de rota
-            riskAlert.style.display = "block"; 
-            locationInputBar.classList.remove("hidden");
-        } else if (panelName === 'report') {
-            panelToShow = reportPanel;
-            riskAlert.style.display = "none";
-            // Oculta a barra de input para o painel de relato
-            locationInputBar.classList.add("hidden"); 
-        } else { // locationSelection
-            panelToShow = locationSelectionPanel;
-            riskAlert.style.display = "none";
-            locationInputBar.classList.remove("hidden");
-        }
+        if (panelName === 'route') panelToShow = routePanel; 
+        else if (panelName === 'report') { panelToShow = reportPanel; locationInputBar.classList.add("hidden"); }
+        else panelToShow = locationSelectionPanel;
         
         panelToShow.classList.remove("hidden-panel");
         
-        // Atualiza o botão dummy da seleção de localização
         const inputsFilled = originInput.value.trim() !== "" && destinationInput.value.trim() !== "";
         goBtnDummy.disabled = !inputsFilled;
-        if (inputsFilled) {
-             goBtnDummy.innerHTML = '<i class="fa-solid fa-arrow-right"></i> VER ROTA';
-             goBtnDummy.onclick = requestRoute;
-        } else {
-             goBtnDummy.innerHTML = '<i class="fa-solid fa-route"></i> Digite um Destino';
-             goBtnDummy.onclick = null;
-        }
+        goBtnDummy.innerHTML = inputsFilled ? '<i class="fa-solid fa-arrow-right"></i> VER ROTA' : '<i class="fa-solid fa-route"></i> Digite um Destino';
+        goBtnDummy.onclick = inputsFilled ? requestRoute : null;
 
-        // Limpa a rota e os marcadores de risco, exceto se estiver no painel 'route'
-        if (panelName !== 'route') {
-            directions.setOrigin("");
-            directions.setDestination("");
-            riskMarkers.forEach(m => m.remove());
-            riskMarkers = [];
+        if (panelName !== 'route' && panelName !== 'report') {
+            directions.setOrigin(""); directions.setDestination("");
+            riskMarkers.forEach(m => m.remove()); riskMarkers = [];
         }
     }
+    function startNavigation() {
+        isNavigating = true;
+        hideUIElements(true);
+        map.flyTo({ 
+            center: [originInput.getAttribute('data-lng'), originInput.getAttribute('data-lat')], 
+            zoom: 16, essential: true, speed: 0.8 
+        });
+        map.dragPan.disable(); map.doubleClickZoom.disable(); 
+        map.touchZoomRotate.disable(); 
+    }
 
-    /** Exibe o painel de seleção de localização (estado inicial). */
-    function showInitialPanel() {
+    function endNavigation() {
+        isNavigating = false;
+        hideUIElements(false);
         showPanel('locationSelection');
+        map.dragPan.enable(); map.doubleClickZoom.enable(); 
+        map.touchZoomRotate.enable(); 
+        directions.setOrigin(""); directions.setDestination("");
     }
 
-    /** Oculta todos os painéis. Usado ao iniciar a navegação. */
-    function hideAllPanels() {
-        locationInputBar.classList.add("hidden");
-        mainBottomPanel.classList.add("hidden");
-        riskAlert.style.display = "none";
-        riskMarkers.forEach(m => m.remove());
-        riskMarkers = [];
+    function hideUIElements(hide) {
+        locationInputBar.classList.toggle("hidden", hide);
+        mainBottomPanel.classList.toggle("hidden", hide);
+        riskAlert.style.display = 'none';
+        centerBtn.style.display = hide ? 'block' : 'block';
+        alertBtn.style.display = hide ? 'block' : 'block';
+        sosBtn.style.display = hide ? 'block' : 'block';
+        endNavigationBtn.style.display = hide ? 'flex' : 'none';
     }
 
-    // --- Listeners de Evento ---
 
-    map.on("load", () => {
-        geo.trigger(); // Inicia a geolocalização ao carregar o mapa
-        showInitialPanel();
-    });
-
-    geo.on("geolocate", (e) => {
-        userCoords = [e.coords.longitude, e.coords.latitude];
+    async function handleAutocomplete(e) {
+        const query = e.target.value.trim();
+        if (query.length < 3 || isNavigating) { autocompleteContainer.classList.add('hidden-panel'); return; }
         
-        if (originInput.value.trim() === "") {
-            originInput.value = "Minha Localização";
-            originInput.setAttribute('data-lat', userCoords[1]);
-            originInput.setAttribute('data-lng', userCoords[0]);
-            
-            // Tenta buscar a rota automaticamente após a geolocalização se o destino já estiver preenchido
-            if (destinationInput.value.trim() !== "") {
-                requestRoute();
-            } else {
-                showInitialPanel(); // Atualiza o botão 'Ver Rota'
-            }
-        }
-    });
-    
-    // Tratamento de sucesso/erro da rota do Mapbox Directions
+        clearTimeout(geocodingTimeout);
+        geocodingTimeout = setTimeout(async () => {
+            try {
+                const response = await mapboxClient.geocoding.forwardGeocode({
+                    query: query, limit: 5, autocomplete: true, language: ['pt-BR']
+                }).send();
+
+                autocompleteContainer.innerHTML = '';
+                if (response?.body?.features?.length > 0) {
+                    response.body.features.forEach(feature => {
+                        const item = document.createElement('div');
+                        item.className = 'autocomplete-item';
+                        item.innerHTML = `<span class="main-text">${feature.text}</span> <br>${feature.place_name.replace(feature.text + ', ', '')}`;
+                        item.onclick = () => selectAutocomplete(feature);
+                        autocompleteContainer.appendChild(item);
+                    });
+                    autocompleteContainer.classList.remove('hidden-panel');
+                } else {
+                    autocompleteContainer.classList.add('hidden-panel');
+                }
+            } catch (error) { console.error("Erro no autocompletar:", error); }
+        }, 300);
+    }
+
+    function selectAutocomplete(feature) {
+        destinationInput.value = feature.place_name;
+        destinationInput.setAttribute('data-lat', feature.center[1]);
+        destinationInput.setAttribute('data-lng', feature.center[0]);
+        autocompleteContainer.classList.add('hidden-panel');
+        requestRoute();
+    }
+
+    /* --- Event Listeners --- */
+    map.on("load", () => { geo.trigger(); showPanel('locationSelection'); });
     directions.on("route", (e) => {
-        if (!e.route || e.route.length === 0) {
-            alert("Não foi possível encontrar uma rota. Tente mudar o destino ou o meio de transporte.");
-            showInitialPanel();
-            return;
-        }
-        const route = e.route[0]; 
-        updateRouteInfo(route);
-        map.fitBounds(route.bbox, { padding: 
-            {top: 250, bottom: 200, left: 50, right: 100},
-            duration: 1200 
-        });
+        if (!e.route || e.route.length === 0) { alert("Não foi possível encontrar uma rota."); showPanel('locationSelection'); return; }
+        const route = e.route[0]; updateRouteInfo(route);
+        map.fitBounds(route.bbox, { padding: {top: 250, bottom: 200, left: 50, right: 100}, duration: 1200 });
     });
+    directions.on('error', (e) => { console.error('Directions error:', e); alert('Ocorreu um erro ao calcular a rota.'); showPanel('locationSelection'); });
     
-    directions.on('error', (e) => {
-        console.error('Directions error:', e);
-        alert('Ocorreu um erro ao calcular a rota. Tente novamente.');
-        showInitialPanel();
-    });
+    destinationInput.addEventListener("input", handleAutocomplete);
+    destinationInput.addEventListener("blur", () => setTimeout(() => autocompleteContainer.classList.add('hidden-panel'), 200)); 
+    destinationInput.addEventListener("focus", () => handleAutocomplete({target: destinationInput})); 
     
-    // Ações de Botões Fixos
-    centerBtn.addEventListener("click", () => {
-        if (userCoords) {
-            map.flyTo({ center: userCoords, zoom: 16, essential: true });
-        } else {
-            alert("Localização não disponível. Ative o GPS ou aguarde a primeira leitura.");
-        }
+    originInput.addEventListener("input", () => {
+        if (originInput.value.trim() === "") originInput.value = "Minha Localização";
+        requestRoute();
     });
 
-    modeButtons.forEach(btn => {
-        btn.addEventListener("click", () => {
-            if (btn.classList.contains("active")) return;
-            modeButtons.forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            currentProfile = btn.getAttribute("data-profile");
-        
-            if (originInput.value.trim() !== "" && destinationInput.value.trim() !== "") {
-                requestRoute();
-            }
-        });
-    });
+    modeButtons.forEach(btn => btn.addEventListener("click", () => {
+        if (btn.classList.contains("active") || isNavigating) return;
+        modeButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentProfile = btn.getAttribute("data-profile");
+        if (originInput.value.trim() !== "" && destinationInput.value.trim() !== "") requestRoute();
+    }));
 
-    switchBtn.addEventListener("click", () => {
-        const tempValue = originInput.value;
-        const tempLat = originInput.getAttribute('data-lat');
-        const tempLng = originInput.getAttribute('data-lng');
-
-        originInput.value = destinationInput.value;
-        originInput.setAttribute('data-lat', destinationInput.getAttribute('data-lat'));
-        originInput.setAttribute('data-lng', destinationInput.getAttribute('data-lng'));
-
-        destinationInput.value = tempValue;
-        destinationInput.setAttribute('data-lat', tempLat);
-        destinationInput.setAttribute('data-lng', tempLng);
-
-        if (originInput.value.trim() !== "" && destinationInput.value.trim() !== "") {
-            requestRoute();
-        } else {
-            showInitialPanel();
-        }
-    });
-    
     startBtn.addEventListener("click", () => {
+        if (isNavigating) return;
         startBtn.innerHTML = '<span class="spinner"></span> INICIANDO...';
         startBtn.classList.add("loading");
-        
         setTimeout(() => {
             startBtn.innerHTML = '<i class="fa-solid fa-route"></i> NAVEGANDO...';
             startBtn.classList.remove("loading");
-            
-            // Oculta os painéis para focar na navegação
-            hideAllPanels(); 
-
-            if (userCoords) {
-                map.flyTo({ center: userCoords, zoom: 18, essential: true, speed: 1.5 });
-            }
-        }, 1500); 
+            startNavigation();
+        }, 1000); 
     });
 
-    // Dispara a busca de rota no 'input' (digitar) e 'blur' (sair do campo)
-    [originInput, destinationInput].forEach(input => {
-        input.addEventListener("input", () => {
-            input.setAttribute('data-lat', '');
-            input.setAttribute('data-lng', '');
-            
-            if (originInput.value.trim() === "" || destinationInput.value.trim() === "") {
-                showInitialPanel();
-            }
-        });
-        
-        // Recalcula ao perder o foco, se ambos estiverem preenchidos
-        input.addEventListener("blur", () => {
-            if (originInput.value.trim() !== "" && destinationInput.value.trim() !== "" && !isSearching) {
-                requestRoute();
-            }
-        });
-        
-        input.addEventListener("keypress", (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                if (originInput.value.trim() !== "" && destinationInput.value.trim() !== "" && !isSearching) {
-                    input.blur(); 
-                    requestRoute();
-                }
-            }
-        });
+    endNavigationBtn.addEventListener("click", endNavigation);
+    centerBtn.addEventListener("click", () => {
+        if (userCoords) map.flyTo({ center: userCoords, zoom: isNavigating ? 16 : 14, essential: true });
+        else alert("Localização não disponível.");
     });
-    
-    // --- Lógica NOVO Painel de Relato ---
-
     alertBtn.addEventListener("click", () => {
-        if (userCoords) {
-            showPanel('report');
-        } else {
-            alert("Aguardando sua localização GPS para relatar um incidente.");
-        }
+        if (userCoords && !isNavigating) showPanel('report');
+        else if (userCoords && isNavigating) alert('Seu relatório será enviado em tempo real.'); // Simulação de envio durante navegação
+        else alert("Aguardando sua localização GPS.");
+    });
+    reportCloseBtn.addEventListener("click", () => showPanel('route'));
+
+    switchBtn.addEventListener("click", () => {
+        const [origVal, destVal] = [originInput.value, destinationInput.value];
+        const [origLat, destLat] = [originInput.getAttribute('data-lat'), destinationInput.getAttribute('data-lat')];
+        const [origLng, destLng] = [originInput.getAttribute('data-lng'), destinationInput.getAttribute('data-lng')];
+
+        originInput.value = destVal;
+        destinationInput.value = origVal;
+        originInput.setAttribute('data-lat', destLat);
+        originInput.setAttribute('data-lng', destLng);
+        destinationInput.setAttribute('data-lat', origLat);
+        destinationInput.setAttribute('data-lng', origLng);
+        
+        requestRoute();
     });
 
-    reportCloseBtn.addEventListener("click", showInitialPanel);
-
-    reportButtons.forEach(btn => {
-        btn.addEventListener("click", () => {
-            const category = btn.getAttribute("data-category");
-            const coords = userCoords;
-            const timestamp = new Date().toISOString();
-            
-            // SIMULAÇÃO DE ENVIO AO BACKEND
-            console.log(`[BACKEND SIMULADO] Incidente reportado:`);
-            console.log(`Tipo: ${category}`);
-            console.log(`Localização: ${coords[1]}, ${coords[0]}`);
-            console.log(`Hora: ${timestamp}`);
-            
-            alert(`✅ Incidente de "${btn.textContent.trim()}" reportado com sucesso na sua localização. Obrigado por contribuir com a segurança!`);
-            
-            showInitialPanel(); // Retorna ao estado inicial
-        });
-    });
-
-    // Ações SOS
-    sosBtn.addEventListener("click", () => {
-        alert("🚨 SOS ATIVADO! Enviando sua localização e pedido de ajuda aos seus contatos de emergência e autoridades (SIMULADO).");
-    });
+    document.querySelectorAll(".report-btn").forEach(btn => btn.addEventListener("click", (e) => {
+        const category = e.currentTarget.getAttribute('data-category');
+        alert(`Incidente de ${category.replace('-', ' ')} reportado com sucesso!`);
+        showPanel('route'); 
+    }));
 </script>
 </body>
 </html>

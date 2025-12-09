@@ -95,8 +95,8 @@ class Report(db.Model):
     longitude = db.Column(db.Float, nullable=False)
     risk_level = db.Column(db.Integer, nullable=False)  # 1, 2, 3
     comment = db.Column(db.String(500), nullable=True)
-    neighborhood = db.Column(db.String(100), nullable=True) # NOVO: Contexto de localização
-    city = db.Column(db.String(100), nullable=True)         # NOVO: Contexto de localização
+    neighborhood = db.Column(db.String(100), nullable=True) # Contexto de localização
+    city = db.Column(db.String(100), nullable=True)         # Contexto de localização
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
     user = db.relationship("User", backref="reports", lazy=True)
@@ -125,39 +125,67 @@ def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> fl
 
 
 def _time_of_day_weight(dt: datetime.datetime) -> float:
-    """Aplica peso de risco baseado no horário (e.g., madrugadas mais perigosas)."""
+    """
+    Aplica peso de risco baseado no horário.
+    Ajustado para refletir picos na madrugada e início da noite.
+    """
     hour = dt.hour
     
     # 0h - 4h: Madrugada (Peso Máximo)
     if 0 <= hour < 5:
-        return 1.6
+        return 1.8 
+    
     # 22h - 23h: Noite avançada
     if 22 <= hour <= 23:
-        return 1.45
-    # 17h - 22h: Início da noite/Escurecendo
-    if 17 <= hour < 22:
+        return 1.6 
+    
+    # 18h - 21h: Início da noite/Escurecendo
+    if 18 <= hour < 22:
+        return 1.4 
+        
+    # 17h - 18h: Fim de Tarde
+    if 17 <= hour < 18:
         return 1.25
+    
     # 5h - 7h: Início da manhã
     if 5 <= hour < 7:
-        return 1.15
+        return 1.2
+        
     # 7h - 17h: Dia/Horário comercial (Peso normal/próximo de 1.0)
     if 7 <= hour < 17:
-        return 1.05 if 7 <= hour < 9 else 1.0
+        return 1.1 if 7 <= hour < 9 else 1.0
     
     return 1.0 # Padrão
 
 def _decay_time_weight(created_at: datetime.datetime) -> float:
-    """Aplica decaimento de peso baseado no tempo decorrido."""
+    """Aplica decaimento exponencial de peso baseado no tempo decorrido (horas)."""
     now = datetime.datetime.utcnow()
     hours_diff = (now - created_at).total_seconds() / 3600.0
-    # Decaimento: Cai para 0.2 após ~30 horas. 
-    # Max(0.2) garante que relatos antigos ainda contribuam minimamente.
-    return max(0.2, 1.4 - (hours_diff / 18.0))
+    
+    # Fator de decaimento: 0.05 faz o peso cair para ~0.3 em 24h e ~0.1 em 48h.
+    decay_factor = 0.05 
+    weight = math.exp(-decay_factor * hours_diff)
+    
+    # Garante que o peso mínimo seja 0.1 para relatos muito antigos.
+    return max(0.1, weight)
+
+
+def _get_risk_category(score: float) -> Dict[str, Any]:
+    """
+    Categoriza a pontuação de risco (0-10) em nível e cor.
+    Cor 'orange' para risco Médio/Alerta.
+    """
+    if score >= 7.0:
+        return {"level": "Alto", "color_code": "red"} 
+    if score >= 4.0:
+        return {"level": "Médio", "color_code": "orange"} # COR LARANJA AQUI!
+    if score >= 1.0:
+        return {"level": "Baixo", "color_code": "yellowgreen"}
+    return {"level": "Muito Baixo", "color_code": "green"} 
+
 
 def _get_nearby_reports(lat: float, lng: float, radius_m: int = 200, limit: int = 800) -> List[Report]:
-    """Busca relatórios próximos. Limita a busca total para desempenho."""
-    # Buscar todos e filtrar com Haversine é menos performático que PostGIS,
-    # mas funciona bem para demonstração com SQLite. O limit ajuda.
+    """Busca relatórios próximos."""
     reports = (
         db.session.execute(
             db.select(Report)
@@ -184,7 +212,7 @@ def _get_nearby_reports(lat: float, lng: float, radius_m: int = 200, limit: int 
 
 def calculate_risk_score(lat: float, lng: float, radius_m: int = 200) -> Dict[str, Any]:
     """Calcula o risco médio (0-10) num raio em torno de um ponto (lat, lng)."""
-    # Usa a função de busca e limita os reports processados para manter o desempenho.
+    # Limita o número de reports processados para manter o desempenho.
     nearby = _get_nearby_reports(lat, lng, radius_m=radius_m, limit=800)[:80]
 
     if not nearby:
@@ -197,6 +225,7 @@ def calculate_risk_score(lat: float, lng: float, radius_m: int = 200) -> Dict[st
         time_weight = _decay_time_weight(r.created_at)
         tod_weight = _time_of_day_weight(r.created_at)
 
+        # O final_score pode ultrapassar 10.0 temporariamente.
         final_score = base * time_weight * tod_weight
         scores.append(final_score)
 
@@ -236,18 +265,15 @@ def reverse_geocode(lat: float, lng: float) -> Dict[str, Optional[str]]:
 
         if data.get("features"):
             feature = data["features"][0]
-            # O Mapbox retorna componentes contextuais, buscamos por 'neighborhood' e 'place'/'locality'
             context = feature.get("context", [])
             
             for item in context:
                 if 'neighborhood' in item['id']:
                     neighborhood = item['text']
                 elif 'place' in item['id'] or 'locality' in item['id']:
-                    # Prioriza a cidade (place/locality)
                     if not city: 
                         city = item['text']
             
-            # Se o próprio resultado principal for um bairro e não tiver pego
             if feature.get("place_type") and ("neighborhood" in feature["place_type"] or "locality" in feature["place_type"]) and not neighborhood:
                 neighborhood = feature["text"]
 
@@ -286,7 +312,6 @@ def mapbox_route(origin: List[float], destination: List[float], profile: str) ->
         return resp.json()
     except requests.exceptions.RequestException as e:
         app.logger.error(f"Erro na Mapbox: {e}")
-        # Lançar erro customizado para o Flask tratar
         raise APIError(f"Erro ao chamar Mapbox: {e}", 503)
 
 
@@ -303,9 +328,8 @@ def enrich_route_with_risk(route_data: Dict[str, Any]) -> Dict[str, Any]:
     risk_points = []
     
     # Estratégia de amostragem inteligente: 
-    # 1 ponto a cada 100-200 metros, no máximo 50 pontos.
+    # 1 ponto a cada ~200 metros, no máximo 50 pontos.
     distance_km = route_data["distance"] / 1000
-    # Calcula quantos pontos precisamos para ter ~150-250m entre eles
     num_samples = min(50, max(10, int(distance_km * 1000 / 200))) 
     
     step = max(1, len(coords) // num_samples) 
@@ -314,10 +338,15 @@ def enrich_route_with_risk(route_data: Dict[str, Any]) -> Dict[str, Any]:
         lng, lat = coords[i]
         # Cálculo de risco no ponto (raio menor para maior precisão pontual)
         info = calculate_risk_score(lat, lng, radius_m=100) 
+        
+        # 🌟 NOVO: Adiciona a categoria de risco por ponto
+        category = _get_risk_category(info["risk_score"])
+        
         risk_points.append({
             "lat": lat,
             "lng": lng,
             "risk_score": info["risk_score"],
+            "risk_category": category["level"],
             "reports_count": info["reports_count"]
         })
 
@@ -338,7 +367,6 @@ def find_safest_route(origin: List[float], destination: List[float], profile: st
     route_json = mapbox_route(origin, destination, profile)
     
     if not route_json.get("routes"):
-        # Retorna a estrutura, mas sem rotas
         return {"safest_route": None, "alternatives_count": 0, "all_routes_risk_summary": []}
 
     all_routes = route_json["routes"]
@@ -358,7 +386,6 @@ def find_safest_route(origin: List[float], destination: List[float], profile: st
         })
         
     # Ordena: 1. Pelo menor risco, 2. Pela menor duração.
-    # Isso desempata rotas com risco similar, priorizando a mais rápida.
     enriched_routes.sort(key=lambda x: (x["risk_score"], x["duration"]))
     
     safest_route = enriched_routes[0]
@@ -374,6 +401,54 @@ def find_safest_route(origin: List[float], destination: List[float], profile: st
     }
 
 
+# Funções de Hotspot (Manteve a estrutura original, mas o corpo deve ser definido)
+def compute_hotspots(limit=20, cell_size=0.003, min_reports=2):
+    """
+    A função que calcula os hotspots (pontos de maior concentração de risco)
+    Agrupa relatórios por célula de grade (cell_size) e calcula o risco médio.
+    (Implementação simplificada/mockada para o contexto do arquivo único)
+    """
+    # Exemplo: Agrupamento básico por bairro/cidade
+    # Em produção, essa lógica seria mais complexa (e.g., PostGIS, H3, ou a lógica de grade da sua versão anterior)
+
+    # Buscar todos os reports ativos
+    reports = db.session.execute(db.select(Report)).scalars().all()
+
+    # Agrupamento por bairro e cidade para simplificar
+    location_risks = defaultdict(lambda: {"total_score": 0.0, "count": 0, "lat": 0.0, "lng": 0.0})
+    
+    for r in reports:
+        if r.neighborhood and r.city:
+            key = f"{r.neighborhood}, {r.city}"
+            # Usa o score do report de nível 1, 2 ou 3 para a soma
+            score = BASE_SCORES.get(r.risk_level, 5.0) 
+            
+            location_risks[key]["total_score"] += score
+            location_risks[key]["count"] += 1
+            # Para simplificar, pega a última coordenada reportada como 'centro'
+            location_risks[key]["lat"] = r.latitude
+            location_risks[key]["lng"] = r.longitude
+
+
+    hotspots_list = []
+    for key, data in location_risks.items():
+        if data["count"] >= min_reports:
+            avg_score = data["total_score"] / data["count"]
+            category = _get_risk_category(avg_score)
+            hotspots_list.append({
+                "location": key,
+                "latitude": data["lat"],
+                "longitude": data["lng"],
+                "risk_score": avg_score,
+                "reports_count": data["count"],
+                "risk_level_tag": category["level"]
+            })
+
+    # Ordena pelo risco
+    hotspots_list.sort(key=lambda x: x["risk_score"], reverse=True)
+    return hotspots_list[:limit]
+
+
 # ============================================================
 # ⚙️ ROTAS / ENDPOINTS
 # ============================================================
@@ -381,8 +456,7 @@ def find_safest_route(origin: List[float], destination: List[float], profile: st
 # Serve o frontend principal
 @app.route("/")
 def home():
-    # Retorna o template, garantindo que 'inicio.html' existe
-    # (Ou o código HTML/JS da sua pergunta anterior)
+    # Retorna o template (crie um arquivo 'inicio.html' na pasta 'templates')
     return render_template("inicio.html")
 
 
@@ -444,7 +518,7 @@ def create_report():
     if risk_level not in (1, 2, 3):
         raise APIError("risk_level deve ser 1 (baixo), 2 (médio) ou 3 (alto).")
     
-    # 🌟 NOVO: Geocoding Reverso para contexto de bairro
+    # Geocoding Reverso para contexto de bairro
     location_data = reverse_geocode(lat, lng)
 
     report = Report(
@@ -461,8 +535,8 @@ def create_report():
         db.session.add(report)
         db.session.commit()
     except IntegrityError:
-         db.session.rollback()
-         raise APIError("Erro ao salvar relato no banco de dados.", 500)
+          db.session.rollback()
+          raise APIError("Erro ao salvar relato no banco de dados.", 500)
 
     return jsonify({
         "message": "Relato registrado com sucesso", 
@@ -488,11 +562,14 @@ def get_risk():
         raise APIError("Coordenadas inválidas.")
 
     info = calculate_risk_score(lat, lng, radius_m=radius_m)
+    category = _get_risk_category(info["risk_score"])
+    
     return jsonify({
         "latitude": lat,
         "longitude": lng,
         "risk_score": info["risk_score"],
-        "risk_level_tag": "Alto" if info["risk_score"] >= 7.5 else ("Médio" if info["risk_score"] >= 4.0 else "Baixo"),
+        "risk_level_tag": category["level"],
+        "suggested_color": category["color_code"],
         "reports_count": info["reports_count"]
     })
 
@@ -509,16 +586,6 @@ def hotspots():
     except (TypeError, ValueError):
         raise APIError("Parâmetros de consulta inválidos.", 400)
 
-    # Reutiliza a função original (se for mais complexo, mover para dentro da função)
-    def compute_hotspots_data(limit=20, cell_size=0.003, min_reports=2):
-        # ... (Função compute_hotspots original, simplificada para não repetir) ...
-        # A lógica original está ok, apenas chame ela aqui
-        # Para evitar repetição, mantive o corpo da função no código original.
-        # Por exemplo:
-        from . import compute_hotspots as original_compute_hotspots
-        return original_compute_hotspots(limit, cell_size, min_reports)
-
-
     data = compute_hotspots(limit=limit, cell_size=cell_size, min_reports=min_reports)
     return jsonify({"hotspots": data})
 
@@ -530,13 +597,6 @@ def safe_route():
     """
     Busca múltiplas rotas (via Mapbox) e retorna a que tiver o menor
     risco médio.
-
-    JSON de entrada:
-      {
-        "origin": [-46.63, -23.55],        # [lng, lat]
-        "destination": [-46.70, -23.60],   # [lng, lat]
-        "profile": "mapbox/driving"        # Opcional: mapbox/driving, mapbox/walking, mapbox/cycling
-      }
     """
     data = request.get_json() or {}
     origin = data.get("origin")
@@ -554,13 +614,11 @@ def safe_route():
         raise APIError("origin e destination devem ser [lng, lat].", 400)
 
     try:
-        # Garante que as coordenadas são floats
         origin = [float(origin[0]), float(origin[1])]
         destination = [float(destination[0]), float(destination[1])]
     except (TypeError, ValueError):
         raise APIError("origin e destination devem conter números.", 400)
 
-    # Validação de coordenadas (simples)
     if not (all(-180 <= c <= 180 for c in [origin[0], destination[0]]) and 
             all(-90 <= c <= 90 for c in [origin[1], destination[1]])):
         raise APIError("Coordenadas de origem ou destino fora do limite geográfico.", 400)
@@ -571,8 +629,10 @@ def safe_route():
     if not result["safest_route"]:
         raise APIError("Nenhuma rota encontrada entre os pontos.", 404)
         
-    # 🌟 NOVO: Adiciona contexto de localização ao ponto de partida/chegada
-    # (Pode ser caro em produção, opcionalmente cachear)
+    # Adiciona a categoria de risco (e cor) à rota mais segura
+    safest_route_score = result["safest_route"]["risk_score"]
+    risk_category = _get_risk_category(safest_route_score)
+
     origin_context = reverse_geocode(origin[1], origin[0])
     destination_context = reverse_geocode(destination[1], destination[0])
 
@@ -582,7 +642,13 @@ def safe_route():
             "destination": destination_context,
             "profile_used": profile
         },
-        **result # Espalha os resultados da rota segura
+        "safest_route": {
+            **result["safest_route"],
+            "risk_category": risk_category["level"],
+            "suggested_color": risk_category["color_code"] # O frontend deve usar esta cor (laranja, vermelho, verde)
+        },
+        "alternatives_count": result["alternatives_count"],
+        "all_routes_risk_summary": result["all_routes_risk_summary"]
     }
     
     return jsonify(response)
@@ -602,9 +668,7 @@ def init_db_command():
         db.create_all()
         print("Banco criado / atualizado.")
         
-# A execução principal foi simplificada, o comando 'flask run' é preferível.
 if __name__ == "__main__":
-    # Garante que o banco seja criado se rodar o arquivo diretamente
     with app.app_context():
         db.create_all()
     app.run(debug=True)
