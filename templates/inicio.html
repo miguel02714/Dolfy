@@ -888,9 +888,7 @@
             console.log("Payload de Reporte:", payload);
             await new Promise(r => setTimeout(r, 500)); 
             
-            alert(`✅ Reporte de ${getIncidentEmoji(selectedType)} enviado com sucesso!`);
-            loadIncidents(); 
-            modalIncident.classList.remove("open");
+            
         }, () => {
             alert("Não foi possível obter sua localização para enviar o relato.");
         });
